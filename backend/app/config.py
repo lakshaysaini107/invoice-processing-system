@@ -1,0 +1,76 @@
+from pydantic_settings import BaseSettings
+from pydantic import field_validator
+from typing import List
+from functools import lru_cache
+from pathlib import Path
+
+
+class Settings(BaseSettings):
+    """Application settings from .env file"""
+
+    # Application
+    APP_NAME: str = "Invoice Processing System"
+    APP_VERSION: str = "1.0.0"
+    DEBUG: bool = True
+    ENVIRONMENT: str = "development" # development, staging, production
+
+    # Server
+    SERVER_HOST: str = "0.0.0.0"
+    SERVER_PORT: int = 8000
+
+    # Database
+    MONGODB_URL: str = ""
+
+    # Security
+    SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # CORS
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000"
+    ]
+
+    # Allowed hosts for security
+    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
+
+    # File upload
+    MAX_FILE_SIZE: int = 10 * 1024 * 1024 # 10MB
+    ALLOWED_FORMATS: List[str] = ["png", "jpg", "jpeg", "pdf"]
+    UPLOAD_DIR: str = "data/uploads"
+
+    # Processing
+    PROCESSING_TIMEOUT: int = 300 # 5 minutes
+    BATCH_SIZE: int = 50
+
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: str = "logs/app.log"
+
+    # OCR
+    TESSERACT_CMD: str = ""
+    TESSDATA_PREFIX: str = ""
+
+    @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", "ALLOWED_FORMATS", mode="before")
+    @classmethod
+    def _split_csv(cls, value):
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    model_config = {
+        "env_file": str(Path(__file__).resolve().parents[2] / ".env"),
+        "case_sensitive": False
+    }
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Get cached settings instance"""
+    return Settings() # type: ignore
+
+
+settings = get_settings()
