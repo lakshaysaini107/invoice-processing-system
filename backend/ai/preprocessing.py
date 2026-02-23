@@ -8,6 +8,7 @@ class PreprocessingEngine:
 
     def __init__(self):
         self.target_dpi = 300
+        self.max_pdf_pages = 3
 
     async def process_image(self, file_path: str) -> np.ndarray:
         """
@@ -16,7 +17,7 @@ class PreprocessingEngine:
         2. Correct skew
         3. Denoise
         4. Enhance contrast
-        5. Binarization
+        5. Light sharpening
         """
         try:
             # Load image (supports PDF -> image conversion)
@@ -41,11 +42,11 @@ class PreprocessingEngine:
             # 3. Contrast enhancement
             image = await self._enhance_contrast(image)
             logger.info("Contrast enhancement applied")
-            
-            # 4. Binarization for OCR
-            image = await self._binarize(image)
-            logger.info("Binarization applied")
-            
+
+            # 4. Light sharpening keeps characters crisp without destroying details
+            image = await self._sharpen(image)
+            logger.info("Sharpening applied")
+
             # 5. Deskew again if needed
             image = await self._correct_skew(image)
             
@@ -56,14 +57,14 @@ class PreprocessingEngine:
             raise
 
     async def _load_image(self, file_path: str) -> np.ndarray:
-        """Load image from file path. If PDF, render first page to image."""
+        """Load image from file path. If PDF, render pages to image."""
         path = Path(file_path)
         if path.suffix.lower() == ".pdf":
-            return self._render_pdf_first_page(file_path)
+            return self._render_pdf_pages(file_path)
         return cv2.imread(file_path)
 
-    def _render_pdf_first_page(self, file_path: str) -> np.ndarray:
-        """Render the first page of a PDF to a BGR image array."""
+    def _render_pdf_pages(self, file_path: str) -> np.ndarray:
+        """Render up to max_pdf_pages pages of a PDF to a single stacked BGR image."""
         try:
             import fitz  # PyMuPDF
         except Exception as e:
@@ -75,20 +76,55 @@ class PreprocessingEngine:
             if doc.page_count == 0:
                 raise ValueError("PDF has no pages")
 
-            page = doc.load_page(0)
             scale = self.target_dpi / 72.0
             matrix = fitz.Matrix(scale, scale)
-            pix = page.get_pixmap(matrix=matrix, alpha=False)
+            rendered_pages = []
 
-            img = np.frombuffer(pix.samples, dtype=np.uint8)
-            img = img.reshape(pix.height, pix.width, pix.n)
+            page_count = min(doc.page_count, self.max_pdf_pages)
+            for page_index in range(page_count):
+                page = doc.load_page(page_index)
+                pix = page.get_pixmap(matrix=matrix, alpha=False)
 
-            # Pixmap is RGB; convert to BGR for OpenCV consistency
-            if pix.n >= 3:
-                img = img[:, :, :3]
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = np.frombuffer(pix.samples, dtype=np.uint8)
+                img = img.reshape(pix.height, pix.width, pix.n)
 
-            return img
+                # Pixmap is RGB; convert to BGR for OpenCV consistency
+                if pix.n >= 3:
+                    img = img[:, :, :3]
+                    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+                rendered_pages.append(img)
+
+            if not rendered_pages:
+                raise ValueError("Failed to render PDF pages")
+
+            if len(rendered_pages) == 1:
+                return rendered_pages[0]
+
+            max_width = max(page.shape[1] for page in rendered_pages)
+            normalized_pages = []
+            spacer_height = 40
+
+            for page in rendered_pages:
+                height, width = page.shape[:2]
+                if width < max_width:
+                    page = cv2.copyMakeBorder(
+                        page,
+                        top=0,
+                        bottom=0,
+                        left=0,
+                        right=max_width - width,
+                        borderType=cv2.BORDER_CONSTANT,
+                        value=(255, 255, 255),
+                    )
+                normalized_pages.append(page)
+                normalized_pages.append(
+                    np.full((spacer_height, max_width, 3), 255, dtype=np.uint8)
+                )
+
+            # Drop the trailing spacer
+            normalized_pages = normalized_pages[:-1]
+            return np.vstack(normalized_pages)
 
     async def _correct_skew(self, image: np.ndarray) -> np.ndarray:
         """Correct document skew using contours"""
@@ -136,13 +172,21 @@ class PreprocessingEngine:
         """Enhance contrast using CLAHE"""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(8, 8))
         enhanced = clahe.apply(gray)
         
         # Convert back to BGR
         enhanced = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
         
         return enhanced
+
+    async def _sharpen(self, image: np.ndarray) -> np.ndarray:
+        """Sharpen image while preserving edges for OCR."""
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        denoised = cv2.fastNlMeansDenoising(gray, None, h=7, templateWindowSize=7, searchWindowSize=21)
+        blurred = cv2.GaussianBlur(denoised, (0, 0), 1.2)
+        sharpened = cv2.addWeighted(denoised, 1.7, blurred, -0.7, 0)
+        return cv2.cvtColor(sharpened, cv2.COLOR_GRAY2BGR)
 
     async def _binarize(self, image: np.ndarray) -> np.ndarray:
         """Convert to binary image for OCR"""

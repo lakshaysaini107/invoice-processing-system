@@ -39,12 +39,14 @@ class VisionLLMEngine:
         normalized = self._normalize_text(text)
         lines = self._split_lines(normalized)
         lower_text = normalized.lower()
+        line_items = self._extract_line_items(lines)
+        pan_candidates = self._extract_pan_candidates(lines, normalized)
 
         invoice_number, invoice_date_from_line = self._find_invoice_number_and_date(lines)
         invoice_date = invoice_date_from_line or self._find_invoice_date(lines)
         due_date = self._find_labeled_date(lines, ["due date", "payment due", "pay by", "terms"], avoid=["ack", "irn"])
 
-        gst_numbers = [normalize_gst_ocr(g) for g in self._find_all_regex(normalized, REGEX_PATTERNS["gst"])]
+        gst_numbers = self._extract_gst_candidates(normalized)
 
         buyer_block = self._extract_buyer_block(lines)
         vendor_block = self._extract_vendor_block(lines)
@@ -58,9 +60,18 @@ class VisionLLMEngine:
         buyer_gst = self._find_gst_in_lines(buyer_block)
 
         if not vendor_gst and gst_numbers:
-            vendor_gst = gst_numbers[0]
-        if not buyer_gst and len(gst_numbers) > 1:
-            buyer_gst = gst_numbers[1]
+            if len(gst_numbers) > 1:
+                vendor_gst = gst_numbers[0]
+            elif not buyer_gst:
+                vendor_gst = gst_numbers[0]
+        if not buyer_gst and gst_numbers:
+            if len(gst_numbers) > 1:
+                buyer_gst = gst_numbers[-1]
+            elif not vendor_gst:
+                buyer_gst = gst_numbers[0]
+
+        vendor_gst = self._repair_gst_with_pan(vendor_gst, pan_candidates)
+        buyer_gst = self._repair_gst_with_pan(buyer_gst, pan_candidates)
 
         purchase_order_number = self._find_labeled_code(
             lines,
@@ -80,6 +91,12 @@ class VisionLLMEngine:
 
         total_amount = self._find_total_amount(lines)
 
+        # If subtotal missing and line items are present, use line item totals.
+        if invoice_amount is None and line_items:
+            line_item_total = sum(item.get("total", 0.0) for item in line_items)
+            if line_item_total > 0:
+                invoice_amount = round(line_item_total, 2)
+
         # If subtotal missing, infer from total - tax
         if invoice_amount is None and total_amount is not None and tax_amount is not None:
             inferred = total_amount - tax_amount
@@ -98,23 +115,19 @@ class VisionLLMEngine:
             amounts = [a for a in amounts if a is not None and a < total_amount]
             invoice_amount = max(amounts) if amounts else None
 
+        # If tax still missing, infer from total and subtotal when possible.
+        if tax_amount is None and total_amount is not None and invoice_amount is not None:
+            inferred_tax = total_amount - invoice_amount
+            if inferred_tax >= 0:
+                tax_amount = round(inferred_tax, 2)
+
+        if tax_rate is None:
+            tax_rate = self._find_dominant_percentage(lines)
+
         currency = "INR" if ("\u20B9" in normalized or "inr" in lower_text or "rs" in lower_text) else None
 
-        account_number_match = self._find_labeled_regex(
-            lines,
-            label_patterns=[r"a/c\s*no", r"account\s*no"],
-            value_pattern=REGEX_PATTERNS["account_number"],
-        )
-        account_numbers = self._find_all_regex(normalized, REGEX_PATTERNS["account_number"])
-        account_number = account_number_match or (account_numbers[0] if account_numbers else None)
-
-        ifsc_match = self._find_labeled_regex(
-            lines,
-            label_patterns=[r"ifsc"],
-            value_pattern=REGEX_PATTERNS["ifsc"],
-        )
-        ifsc_matches = self._find_all_regex(normalized, REGEX_PATTERNS["ifsc"])
-        ifsc = ifsc_match or (ifsc_matches[0] if ifsc_matches else None)
+        account_number = self._extract_account_number(lines)
+        ifsc = self._extract_ifsc(lines)
 
         account_holder = self._find_value_after_label(
             lines,
@@ -131,6 +144,7 @@ class VisionLLMEngine:
             lines,
             label_patterns=[r"payment\s*terms", r"terms\s*of\s*payment"],
         )
+        branch = self._extract_branch(lines)
 
         return {
             "invoice_number": invoice_number,
@@ -149,24 +163,27 @@ class VisionLLMEngine:
             "currency": currency,
             "payment_terms": payment_terms,
             "purchase_order_number": purchase_order_number,
-            "line_items": [],
+            "line_items": line_items,
             "bank_details": {
                 "account_number": account_number,
                 "account_holder": account_holder,
                 "bank_name": bank_name,
                 "ifsc": ifsc,
-                "branch": None
+                "branch": branch
             },
             "notes": None
         }
 
     def _normalize_text(self, text: str) -> str:
-        text = text.replace("GST!N", "GSTIN").replace("GST1N", "GSTIN")
-        text = text.replace("GSTIN/UIN", "GSTIN")
+        text = text.replace("GST!N", "GSTIN").replace("GST1N", "GSTIN").replace("GSTIN/UIN", "GSTIN")
         text = text.replace("\u2013", "-").replace("\u2014", "-")
+        text = text.replace("\u2018", "'").replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')
+        text = re.sub(r"[|]+", " | ", text)
         # Fix common OCR errors for digits
         text = re.sub(r"(?<=\d)[Oo](?=\d)", "0", text)
         text = re.sub(r"\bO(?=\d)", "0", text)
+        # Preserve line breaks; collapse only repeated spaces/tabs.
+        text = re.sub(r"[ \t]{2,}", " ", text)
         return text
 
     def _split_lines(self, text: str) -> List[str]:
@@ -233,6 +250,9 @@ class VisionLLMEngine:
         address_lines = []
 
         for line in lines:
+            line = self._clean_text_line(line)
+            if not line:
+                continue
             if self._is_noise_line(line):
                 continue
 
@@ -248,30 +268,46 @@ class VisionLLMEngine:
         address = ", ".join(address_lines) if address_lines else None
         return name, address
 
+    def _clean_text_line(self, line: str) -> str:
+        cleaned = re.sub(r"^[^A-Za-z0-9]+", "", line)
+        cleaned = cleaned.strip(" -:;,.|")
+        cleaned = re.sub(r"\s{2,}", " ", cleaned)
+        return cleaned
+
     def _is_probable_name(self, line: str) -> bool:
         if len(line) < 3:
             return False
         if not re.search(r"[A-Za-z]{2,}", line):
             return False
+        if re.search(r"\d{4,}", line):
+            return False
         lowered = line.lower()
         noise = [
             "invoice", "tax", "original", "e-invoice", "irn", "ack", "date",
             "gst", "state", "code", "contact", "phone", "email", "bank",
-            "amount", "total", "hsn", "sac", "qty", "rate"
+            "amount", "total", "hsn", "sac", "qty", "rate", "delivery", "terms",
+            "declaration", "dispatch", "reference", "market", "near", "road", "street",
+            "gate", "nagar", "branch", "code", "lucknow", "firozabad", "pradesh"
         ]
         if any(n in lowered for n in noise):
+            return False
+        words = re.findall(r"[A-Za-z&.]+", line)
+        if len(words) > 10:
             return False
         return True
 
     def _is_noise_line(self, line: str) -> bool:
         lowered = line.lower()
         return any(
-            kw in lowered for kw in ["invoice", "tax invoice", "e-invoice", "ack", "irn"]
+            kw in lowered for kw in ["tax invoice", "e-invoice", "ack", "irn"]
         )
 
     def _is_stop_line(self, line: str) -> bool:
         lowered = line.lower()
-        stop = ["gst", "gstin", "state", "code", "contact", "phone", "email", "pan", "invoice", "date"]
+        stop = [
+            "gst", "gstin", "state", "code", "contact", "phone", "email", "pan", "invoice", "date",
+            "delivery note", "mode/terms", "buyer", "consignee", "total", "bank details", "declaration"
+        ]
         return any(s in lowered for s in stop)
 
     def _extract_vendor_name_from_invoice_line(self, lines: List[str]) -> Optional[str]:
@@ -281,30 +317,86 @@ class VisionLLMEngine:
                 prefix = re.split(r"invoice", line, flags=re.IGNORECASE)[0]
                 if "," in prefix:
                     prefix = prefix.split(",")[-1]
-                candidate = prefix.strip(" -:.<>")
+                candidate = self._clean_text_line(prefix)
                 if self._is_probable_name(candidate):
                     return candidate
         return None
 
     def _find_invoice_number_and_date(self, lines: List[str]) -> Tuple[Optional[str], Optional[str]]:
+        best_number = None
+        best_number_score = -1
+        best_date = None
+
         for i, line in enumerate(lines):
             lower = line.lower()
-            if "invoice" in lower and ("no" in lower or "number" in lower or "inv" in lower or "#" in lower):
-                number = self._extract_invoice_number(line)
-                date = self._extract_date_from_line(line)
-                if not number and i + 1 < len(lines):
-                    number = self._extract_invoice_number(lines[i + 1])
-                if not date and i + 1 < len(lines):
-                    date = self._extract_date_from_line(lines[i + 1])
-                return number, date
-        return None, None
+            if "invoice" not in lower:
+                continue
+            if not any(token in lower for token in ["no", "number", "inv", "#", "dated"]):
+                continue
+            if "tax invoice" in lower and ("no" not in lower and "number" not in lower):
+                continue
+
+            candidate_lines = [line]
+            if i + 1 < len(lines):
+                candidate_lines.append(lines[i + 1])
+            if i + 2 < len(lines):
+                candidate_lines.append(lines[i + 2])
+
+            for candidate_line in candidate_lines:
+                number = self._extract_invoice_number(candidate_line)
+                if number:
+                    score = self._invoice_number_score(number)
+                    if score > best_number_score:
+                        best_number = number
+                        best_number_score = score
+
+                if best_date is None:
+                    best_date = self._extract_date_from_line(candidate_line)
+
+        return best_number, best_date
+
+    def _invoice_number_score(self, value: str) -> int:
+        token = value.strip().upper()
+        score = 0
+        if any(char.isalpha() for char in token):
+            score += 3
+        if any(char.isdigit() for char in token):
+            score += 3
+        if "/" in token or "-" in token:
+            score += 2
+        if 5 <= len(token) <= 24:
+            score += 1
+        if parse_date(token):
+            score -= 4
+        if token.isdigit():
+            score -= 3
+        if token.startswith(("IRN", "ACK", "GST", "PAN", "HSN")):
+            score -= 5
+        return score
 
     def _extract_invoice_number(self, line: str) -> Optional[str]:
+        if not line:
+            return None
+        lowered = line.lower()
+        if "irn" in lowered or "ack no" in lowered:
+            return None
+
         matches = re.findall(r"\b[A-Z0-9][A-Z0-9\-/]{2,30}\b", line, re.IGNORECASE)
+        best = None
+        best_score = -1
         for match in matches:
-            if re.search(r"\d", match):
-                return match.strip()
-        return None
+            token = match.strip().strip(".,:;|")
+            if not re.search(r"\d", token):
+                continue
+            if parse_date(token):
+                continue
+            if token.upper() in {"IRN", "ACK", "NO", "DATED", "INVOICE"}:
+                continue
+            score = self._invoice_number_score(token)
+            if score > best_score:
+                best = token
+                best_score = score
+        return best
 
     def _find_invoice_date(self, lines: List[str]) -> Optional[str]:
         # Prefer lines that mention invoice and date together
@@ -400,23 +492,34 @@ class VisionLLMEngine:
         candidates = []
         for line in lines:
             lower = line.lower()
+            if any(skip in lower for skip in ["ack", "irn", "contact", "phone", "pan", "gstin/uin"]):
+                continue
             if any(label in lower for label in labels):
-                for match in re.finditer(REGEX_PATTERNS["amount"], line):
-                    value = parse_amount(match.group(0))
-                    if value is not None:
+                values = self._extract_decimal_amounts(line)
+                if not values:
+                    for match in re.finditer(REGEX_PATTERNS["amount"], line):
+                        value = parse_amount(match.group(0))
+                        if value is not None:
+                            values.append(value)
+                for value in values:
+                    if value is not None and value < 1_000_000_000:
                         candidates.append(value)
         return max(candidates) if candidates else None
 
     def _find_total_amount(self, lines: List[str]) -> Optional[float]:
         # Prioritize explicit totals
-        priority_labels = [
-            ["grand total", "amount due", "total amount"],
-            ["total"],
-        ]
-        for labels in priority_labels:
-            amount = self._find_amount(lines, labels)
-            if amount is not None:
-                return amount
+        candidates = []
+        for line in lines:
+            lower = line.lower()
+            if not any(label in lower for label in ["grand total", "amount due", "total amount", "total"]):
+                continue
+            if any(skip in lower for skip in ["tax amount (in words)", "hsn/sac", "taxable", "cgst", "sgst", "igst"]):
+                continue
+            values = self._extract_decimal_amounts(line)
+            if values:
+                candidates.extend(values)
+        if candidates:
+            return max(candidates)
         return None
 
     def _sum_tax_amounts(self, lines: List[str]) -> Optional[float]:
@@ -444,9 +547,9 @@ class VisionLLMEngine:
 
     def _find_gst_in_lines(self, lines: List[str]) -> Optional[str]:
         for line in lines:
-            matches = self._find_all_regex(line, REGEX_PATTERNS["gst"])
+            matches = self._extract_gst_candidates(line)
             if matches:
-                return normalize_gst_ocr(matches[0])
+                return matches[0]
         return None
 
     def _find_all_regex(self, text: str, pattern: str) -> List[str]:
@@ -454,3 +557,229 @@ class VisionLLMEngine:
             return re.findall(pattern, text, re.IGNORECASE)
         except Exception:
             return []
+
+    def _extract_decimal_amounts(self, line: str) -> List[float]:
+        matches = re.findall(r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})", line)
+        values = []
+        for match in matches:
+            value = parse_amount(match)
+            if value is not None:
+                values.append(value)
+        return values
+
+    def _find_dominant_percentage(self, lines: List[str]) -> Optional[float]:
+        percentages = []
+        for line in lines:
+            for token in re.findall(r"(\d{1,2}(?:\.\d{1,2})?)\s*%", line):
+                try:
+                    value = float(token)
+                except ValueError:
+                    continue
+                if 0 < value <= 50:
+                    percentages.append(value)
+        if not percentages:
+            return None
+
+        # Prefer the most frequent tax rate.
+        frequency: Dict[float, int] = {}
+        for value in percentages:
+            frequency[value] = frequency.get(value, 0) + 1
+        return max(frequency.items(), key=lambda item: item[1])[0]
+
+    def _extract_gst_candidates(self, text: str) -> List[str]:
+        results = []
+
+        # Direct regex first.
+        for match in self._find_all_regex(text, REGEX_PATTERNS["gst"]):
+            if isinstance(match, tuple):
+                match = "".join(match)
+            candidate = normalize_gst_ocr(str(match).upper().strip())
+            if candidate and candidate not in results:
+                results.append(candidate)
+
+        # OCR-tolerant fallback over compacted alphanumeric stream.
+        compact = re.sub(r"[^A-Z0-9OIL]", "", text.upper())
+        if len(compact) >= 15:
+            # Looser OCR fallback pattern: allows alphanumerics in PAN-related slots.
+            window_pattern = re.compile(
+                r"^[0-9OIL]{2}[A-Z0-9OIL]{5}[0-9OIL]{4}[A-Z0-9OIL]{1}[A-Z0-9OIL]{1}Z[A-Z0-9OIL]{1}$"
+            )
+            for idx in range(len(compact) - 14):
+                window = compact[idx:idx + 15]
+                if window_pattern.match(window):
+                    normalized = normalize_gst_ocr(window)
+                    if normalized not in results:
+                        results.append(normalized)
+
+        return results
+
+    def _extract_pan_candidates(self, lines: List[str], full_text: str) -> List[str]:
+        results: List[str] = []
+
+        for line in lines:
+            if "pan" not in line.lower():
+                continue
+            for match in re.findall(REGEX_PATTERNS["pan"], line, re.IGNORECASE):
+                candidate = str(match).upper()
+                if candidate not in results:
+                    results.append(candidate)
+
+        if results:
+            return results
+
+        for match in re.findall(REGEX_PATTERNS["pan"], full_text, re.IGNORECASE):
+            candidate = str(match).upper()
+            if candidate not in results:
+                results.append(candidate)
+
+        return results
+
+    def _repair_gst_with_pan(self, gst_value: Optional[str], pan_candidates: List[str]) -> Optional[str]:
+        if not gst_value:
+            return gst_value
+
+        gst = re.sub(r"[^A-Z0-9]", "", str(gst_value).upper())
+        if len(gst) != 15:
+            return gst_value
+
+        if not pan_candidates:
+            return gst
+
+        for pan in pan_candidates:
+            mismatch = sum(1 for a, b in zip(gst[2:12], pan) if a != b)
+            has_digit_in_alpha_slot = any(char.isdigit() for char in gst[2:7])
+            if mismatch <= 2 or has_digit_in_alpha_slot:
+                return f"{gst[:2]}{pan}{gst[12:]}"
+
+        return gst
+
+    def _extract_account_number(self, lines: List[str]) -> Optional[str]:
+        labeled_values: List[str] = []
+        generic_values: List[str] = []
+
+        for line in lines:
+            normalized_line = line.replace("O", "0").replace("o", "0")
+            candidates = re.findall(r"\b\d{9,18}\b", normalized_line)
+            if not candidates:
+                continue
+
+            lower = line.lower()
+            if any(label in lower for label in ["a/c", "account", "bank"]):
+                labeled_values.extend(candidates)
+            else:
+                generic_values.extend(candidates)
+
+        source = labeled_values or generic_values
+        if not source:
+            return None
+
+        # Prefer the longest number, usually the account number.
+        source.sort(key=len, reverse=True)
+        return source[0]
+
+    def _extract_ifsc(self, lines: List[str]) -> Optional[str]:
+        def normalize_ifsc(candidate: str) -> Optional[str]:
+            value = re.sub(r"[^A-Z0-9]", "", candidate.upper())
+            if len(value) < 11:
+                return None
+            value = value[:11]
+            value = value[:4] + "0" + value[5:]
+            if re.match(r"^[A-Z]{4}0[A-Z0-9]{6}$", value):
+                return value
+            return None
+
+        patterns = [
+            REGEX_PATTERNS["ifsc"],
+            r"[A-Z]{4}[0O][A-Z0-9O]{6}",
+        ]
+
+        for line in lines:
+            lower = line.lower()
+            if not any(label in lower for label in ["ifsc", "ifs code", "branch"]):
+                continue
+            for pattern in patterns:
+                for match in re.findall(pattern, line, re.IGNORECASE):
+                    normalized = normalize_ifsc(str(match))
+                    if normalized:
+                        return normalized
+        return None
+
+    def _extract_branch(self, lines: List[str]) -> Optional[str]:
+        for line in lines:
+            lower = line.lower()
+            if "branch" not in lower:
+                continue
+            if ":" in line:
+                value = line.split(":", 1)[1].strip()
+                if "&" in value:
+                    value = value.split("&", 1)[0].strip()
+                cleaned = self._clean_text_line(value)
+                return cleaned if cleaned else None
+        return None
+
+    def _extract_line_items(self, lines: List[str]) -> List[Dict[str, Any]]:
+        items: List[Dict[str, Any]] = []
+        for line in lines:
+            compact = re.sub(r"\s+", " ", line).strip()
+            if not compact:
+                continue
+            if "description" in compact.lower() or "hsn/sac" in compact.lower():
+                continue
+            if "total" in compact.lower() and not re.match(r"^\d+\s+", compact):
+                continue
+            if not re.match(r"^\d+\s+", compact):
+                continue
+
+            tokens = compact.split()
+            if len(tokens) < 7:
+                continue
+
+            hsn_idx = -1
+            for idx in range(1, len(tokens)):
+                if re.match(r"^\d{4,8}$", tokens[idx]):
+                    hsn_idx = idx
+                    break
+            if hsn_idx <= 1:
+                continue
+
+            description = " ".join(tokens[1:hsn_idx]).strip(" -:,.;")
+            if not description:
+                continue
+
+            remainder = tokens[hsn_idx + 1:]
+            qty = None
+            qty_idx = None
+            for idx, token in enumerate(remainder):
+                if re.match(r"^\d+(?:\.\d+)?$", token):
+                    qty = parse_amount(token)
+                    qty_idx = idx
+                    break
+            if qty is None or qty_idx is None:
+                continue
+
+            unit = ""
+            if qty_idx + 1 < len(remainder):
+                unit_candidate = remainder[qty_idx + 1].strip(".,;:|")
+                if re.match(r"^[A-Za-z]{1,6}$", unit_candidate):
+                    unit = unit_candidate
+
+            start_idx = qty_idx + 2 if unit else qty_idx + 1
+            trailing_text = " ".join(remainder[start_idx:])
+            monetary_values = self._extract_decimal_amounts(trailing_text)
+            if not monetary_values:
+                continue
+
+            unit_price = monetary_values[0]
+            total = monetary_values[-1] if len(monetary_values) > 1 else round(unit_price * qty, 2)
+
+            items.append(
+                {
+                    "description": description,
+                    "quantity": qty,
+                    "unit": unit or "Nos",
+                    "unit_price": unit_price,
+                    "total": total,
+                }
+            )
+
+        return items

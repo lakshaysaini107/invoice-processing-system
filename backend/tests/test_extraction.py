@@ -82,6 +82,47 @@ async def test_extract_fields_success(vision_llm_engine, mock_image):
     assert result["invoice_number"] == "INV-2024-001"
 
 @pytest.mark.asyncio
+async def test_realistic_invoice_ocr_parsing(vision_llm_engine, mock_image):
+    """Ensure heuristics parse noisy OCR text from scanned invoice PDFs."""
+    ocr_text = """
+    Tax Invoice Original e-Invoice
+    Ack No. : 142518116670710
+    Ack Date : 22-Aug-25
+    Jay Ess Hydropower Co. Invoice No. Dated
+    Kshetra Mandir Market, Near OBC, JSHP/25-26/1082 22-Aug-25
+    GSTIN/UIN: O9AJQPB6361G1Z1
+    Buyer (Bill to)
+    Techno Electric & Engineering Co Ltd
+    Mohanlalganj Near Radha Swami Satsang Bas, Lucknow
+    GSTIN/UIN : O9AAJCS4400J1ZA
+    1 Mcb 63amp DP 853650 1 Pcs 475.00 402.54 Pcs 402.54
+    2 Steelgrip Tape 854690 3 Pcs 9.99 8.47 Pcs 25.41
+    3 Air/Water Hose Pipe 40091100 2.00 Mtr 170.00 144.07 Mtr 288.14
+    CGST 64.45
+    SGST 64.45
+    Total 845.00
+    Bank Name : Axis Bank A/c 922030027678945
+    A/c No. : 922030027678945
+    """
+    result = await vision_llm_engine.extract_fields(
+        image=mock_image,
+        ocr_text=ocr_text,
+        layout_info={}
+    )
+
+    assert result["invoice_number"] == "JSHP/25-26/1082"
+    assert result["invoice_date"] == "2025-08-22"
+    assert result["vendor_name"] == "Jay Ess Hydropower Co"
+    assert result["vendor_gst"] == "09AJQPB6361G1Z1"
+    assert result["buyer_gst"] == "09AAJCS4400J1ZA"
+    assert result["invoice_amount"] == 716.09
+    assert result["tax_amount"] == 128.9
+    assert result["total_amount"] == 845.0
+    assert result["tax_rate"] is None or result["tax_rate"] > 0
+    assert result["bank_details"]["account_number"] == "922030027678945"
+    assert len(result["line_items"]) >= 3
+
+@pytest.mark.asyncio
 async def test_extraction_pipeline_flow(processing_service, mock_image):
     """
     Test the orchestration logic in ProcessingService.

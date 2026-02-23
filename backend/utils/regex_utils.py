@@ -3,13 +3,13 @@ from typing import Dict, List
 
 REGEX_PATTERNS: Dict[str, str] = {
     # GST - Indian GST format (tolerant to common OCR confusions like O/0 or I/1)
-    "gst": r"\b[0-9OIL]{2}[A-Z]{5}[0-9OIL]{4}[A-Z]{1}[A-Z0-9]{1}Z[0-9OIL]{1}\b",
+    "gst": r"\b[0-9OIL]{2}[A-Z]{5}[0-9OIL]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9OIL]{1}\b",
 
     # Invoice Number
     "invoice_number": r"^[A-Z0-9\-\/]{3,20}$",
 
     # Amount formats with or without currency
-    "amount": r"(?:Rs\.?|INR|\u20B9|\$|USD|EUR|\u20AC)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)",
+    "amount": r"(?:Rs\.?|INR|\u20B9|\$|USD|EUR|\u20AC)?\s*((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)",
 
     # Date formats (numeric or month names)
     "date": r"(\d{1,2}[-/]\d{1,2}[-/]\d{2,4}|\d{1,2}[-/][A-Za-z]{3,9}[-/]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9}\s+\d{2,4})",

@@ -17,7 +17,8 @@ def normalize_gst_ocr(gst_number: str) -> str:
         return gst_number
 
     chars = list(gst_number)
-    digit_positions = {0, 1, 7, 8, 9, 10, 14}
+    # Digit positions in GSTIN except checksum (15th char can be alphanumeric).
+    digit_positions = {0, 1, 7, 8, 9, 10}
     for idx in digit_positions:
         char = chars[idx]
         if char in OCR_DIGIT_MAP:
@@ -37,7 +38,7 @@ def validate_gst(gst_number: str) -> bool:
     gst_number = normalize_gst_ocr(gst_number.strip().upper())
     
     # GST pattern
-    pattern = r"^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z\d{1}$"
+    pattern = r"^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}Z[A-Z\d]{1}$"
     
     if not re.match(pattern, gst_number):
         return False

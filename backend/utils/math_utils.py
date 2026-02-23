@@ -67,7 +67,7 @@ def extract_amounts_from_text(text: str) -> list:
     amounts = []
 
     # Pattern for amounts with currency symbols
-    pattern = r"(?:Rs\.?|INR|\u20B9|\$|USD|EUR|\u20AC)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)"
+    pattern = r"(?:Rs\.?|INR|\u20B9|\$|USD|EUR|\u20AC)?\s*((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)"
     matches = re.findall(pattern, text, re.IGNORECASE)
 
     for match in matches:
