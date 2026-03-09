@@ -18,8 +18,15 @@ class Settings(BaseSettings):
     SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 8000
 
-    # Database
-    MONGODB_URL: str = ""
+    # Database (MySQL)
+    MYSQL_URL: str = ""
+    MYSQL_HOST: str = "localhost"
+    MYSQL_PORT: int = 3306
+    MYSQL_USER: str = "root"
+    MYSQL_PASSWORD: str = ""
+    MYSQL_DATABASE: str = "invoices"
+    MYSQL_MIN_POOL_SIZE: int = 1
+    MYSQL_MAX_POOL_SIZE: int = 10
 
     # Security
     SECRET_KEY: str
@@ -59,6 +66,17 @@ class Settings(BaseSettings):
     def _split_csv(cls, value):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def _coerce_debug(cls, value):
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "prod", "production"}:
+                return False
+            if normalized in {"debug", "dev", "development"}:
+                return True
         return value
 
     model_config = {

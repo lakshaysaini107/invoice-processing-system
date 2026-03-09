@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -11,7 +11,7 @@ class UserRole(str, Enum):
 
 class User(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
-    email: EmailStr
+    email: str
     password_hash: str
     full_name: str
     company: Optional[str] = None
@@ -33,7 +33,7 @@ class User(BaseModel):
         arbitrary_types_allowed = True
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: str
     password: str
     full_name: str
     company: Optional[str] = None

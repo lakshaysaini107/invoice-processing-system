@@ -7,44 +7,37 @@ from backend.core.logging import logger
 import time
 
 # Database imports
-from backend.database.mongodb import MongoDBClient
+from backend.database.mysql import MySQLClient
 
 # API Router imports
-from backend.api import upload, process, review, export
+from backend.api import auth, upload, process, review, export
 
 # Database connection startup
 async def startup_event():
     """Run on application startup"""
-    logger.info("🚀 Application starting...")
+    logger.info("Application starting...")
     logger.info(f"App Name: {settings.APP_NAME}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
-    
-    # Connect to MongoDB
+
+    # Connect to MySQL (required)
     try:
-        if settings.MONGODB_URL:
-            await MongoDBClient.connect_mongodb()
-            logger.info("✅ MongoDB connected")
-        else:
-            logger.warning("⚠️  MONGODB_URL not set, skipping MongoDB connection")
+        await MySQLClient.connect_mysql()
+        logger.info("MySQL connected")
     except Exception as e:
-        logger.error(f"❌ Failed to connect to MongoDB: {str(e)}")
-        # Don't fail startup if MongoDB is optional
-    
-    # MongoDB is the only required datastore in this setup.
+        logger.error(f"Failed to connect to MySQL: {str(e)}")
+        raise
 
 
 async def shutdown_event():
     """Run on application shutdown"""
-    logger.info("🛑 Application shutting down...")
-    
-    # Close MongoDB connection
+    logger.info("Application shutting down...")
+
+    # Close MySQL connection
     try:
-        await MongoDBClient.close_mongodb()
-        logger.info("✅ MongoDB connection closed")
+        await MySQLClient.close_mysql()
+        logger.info("MySQL connection closed")
     except Exception as e:
-        logger.error(f"Error closing MongoDB: {str(e)}")
-    
-    # MongoDB is the only datastore to close in this setup.
+        logger.error(f"Error closing MySQL: {str(e)}")
 
 
 @asynccontextmanager
@@ -105,6 +98,7 @@ async def health_check():
 
 
 # Include API routers
+app.include_router(auth.router, prefix="/api")
 app.include_router(upload.router, prefix="/api")
 app.include_router(process.router, prefix="/api")
 app.include_router(review.router, prefix="/api")

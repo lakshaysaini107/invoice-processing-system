@@ -73,4 +73,5 @@ async def invoice_exception_handler(request, exc: InvoiceProcessingException):
         "error": True,
         "error_code": exc.error_code,
         "message": exc.message,
-        "status_code": exc.status_code
+        "status_code": exc.status_code,
+    }

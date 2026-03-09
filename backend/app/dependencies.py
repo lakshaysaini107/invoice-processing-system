@@ -3,8 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.core.security import verify_token
 from typing import Dict, Any, Optional
 from backend.database.repositories.user_repo import UserRepository
-from backend.database.repositories.local_repo import LocalUserRepository, LocalInvoiceRepository
-from backend.database.mongodb import MongoDBClient
+from backend.database.repositories.invoice_repo import InvoiceRepository
 
 
 # Initialize security scheme
@@ -82,15 +81,10 @@ async def get_admin_user(
 # Dependency functions for repositories and services
 def get_user_repository():
     """Dependency for UserRepository"""
-    if MongoDBClient.database is None:
-        return LocalUserRepository()
     return UserRepository()
 
 def get_invoice_repository():
     """Dependency for InvoiceRepository"""
-    from backend.database.repositories.invoice_repo import InvoiceRepository
-    if MongoDBClient.database is None:
-        return LocalInvoiceRepository()
     return InvoiceRepository()
 
 def get_upload_service():

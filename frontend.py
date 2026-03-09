@@ -1,3 +1,4 @@
+import html
 import io
 import json
 import mimetypes
@@ -16,220 +17,523 @@ def apply_futuristic_theme():
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
 
         :root {
-            --bg-0: #f6fbff;
-            --bg-1: #edf7ff;
-            --bg-2: #dbf3ff;
-            --panel: rgba(255, 255, 255, 0.82);
-            --panel-soft: #f8fbff;
-            --line: #d5e6f5;
-            --line-strong: #9cc3e8;
-            --text-main: #16304a;
-            --text-dim: #5f7894;
-            --accent-a: #0ea5e9;
-            --accent-b: #2563eb;
-            --accent-c: #0284c7;
-            --good: #15803d;
-            --warn: #b45309;
-            --card-shadow: 0 10px 36px rgba(20, 55, 91, 0.10);
+            --bg: #f0f4ff;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.78);
+            --glass2: rgba(255, 255, 255, 0.92);
+            --border: rgba(100, 120, 255, 0.10);
+            --border2: rgba(100, 120, 255, 0.22);
+            --blue: #4361ee;
+            --indigo: #7b2ff7;
+            --violet: #b041ff;
+            --cyan: #0ea5e9;
+            --teal: #06d6a0;
+            --rose: #f72585;
+            --text: #0f172a;
+            --text2: #334155;
+            --muted: #64748b;
+            --light: #94a3b8;
+            --sun: #fb7185;
+            --mint: #2dd4bf;
+            --gold: #f59e0b;
+            --sh: 0 10px 30px rgba(67, 97, 238, 0.12);
+            --sh-lg: 0 24px 64px rgba(67, 97, 238, 0.18);
         }
 
         [data-testid="stAppViewContainer"] {
+            position: relative;
+            overflow-x: hidden;
             background:
-                radial-gradient(1000px 340px at 8% -8%, rgba(14, 165, 233, 0.18), transparent 58%),
-                radial-gradient(720px 300px at 90% 1%, rgba(37, 99, 235, 0.15), transparent 62%),
-                linear-gradient(170deg, var(--bg-0), var(--bg-1) 56%, var(--bg-2));
-            color: var(--text-main);
+                radial-gradient(760px 320px at -10% -8%, rgba(245, 158, 11, 0.16), transparent 65%),
+                radial-gradient(640px 290px at 105% 10%, rgba(45, 212, 191, 0.20), transparent 64%),
+                radial-gradient(560px 280px at 35% 98%, rgba(251, 113, 133, 0.16), transparent 62%),
+                var(--bg);
+        }
+
+        .if-live-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .if-aurora {
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(70px);
+            opacity: 0.36;
+            mix-blend-mode: multiply;
+            will-change: transform;
+        }
+
+        .if-aurora.a1 {
+            width: 42vmax;
+            height: 42vmax;
+            left: -10vmax;
+            top: -14vmax;
+            background: radial-gradient(circle at 30% 30%, rgba(245, 158, 11, 0.75), rgba(245, 158, 11, 0) 70%);
+            animation: ifFloatA 20s ease-in-out infinite alternate;
+        }
+
+        .if-aurora.a2 {
+            width: 36vmax;
+            height: 36vmax;
+            right: -9vmax;
+            top: 12vh;
+            background: radial-gradient(circle at 55% 45%, rgba(45, 212, 191, 0.72), rgba(45, 212, 191, 0) 70%);
+            animation: ifFloatB 24s ease-in-out infinite alternate;
+        }
+
+        .if-aurora.a3 {
+            width: 34vmax;
+            height: 34vmax;
+            left: 22vw;
+            bottom: -14vmax;
+            background: radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.7), rgba(251, 113, 133, 0) 70%);
+            animation: ifFloatC 22s ease-in-out infinite alternate;
+        }
+
+        .if-grid-fog {
+            position: absolute;
+            inset: -8%;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: radial-gradient(circle at 50% 32%, rgba(0, 0, 0, 0.7), transparent 72%);
+            opacity: 0.28;
+            animation: ifGridDrift 24s linear infinite;
+        }
+
+        @keyframes ifFloatA {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            100% { transform: translate3d(9vmax, 6vmax, 0) scale(1.12); }
+        }
+
+        @keyframes ifFloatB {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            100% { transform: translate3d(-8vmax, -5vmax, 0) scale(1.1); }
+        }
+
+        @keyframes ifFloatC {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            100% { transform: translate3d(5vmax, -7vmax, 0) scale(1.08); }
+        }
+
+        @keyframes ifGridDrift {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-72px, -72px, 0); }
         }
 
         [data-testid="stHeader"] {
-            background: rgba(255, 255, 255, 0.76);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--line);
+            background: var(--glass2);
+            border-bottom: 1px solid var(--border2);
+            backdrop-filter: blur(20px);
         }
 
+        [data-testid="stToolbar"],
+        [data-testid="collapsedControl"],
         [data-testid="stSidebar"] {
             display: none !important;
         }
 
-        [data-testid="collapsedControl"] {
-            display: none !important;
-        }
-
-        [data-testid="stSidebar"] > div:first-child {
-            background: linear-gradient(180deg, #f4faff 0%, #edf6ff 100%);
-            border-right: 1px solid var(--line);
-        }
-
         .main .block-container {
-            max-width: 1180px;
-            padding-top: 1.4rem;
-            padding-bottom: 2rem;
-        }
-
-        h1, h2, h3 {
-            font-family: "Outfit", sans-serif !important;
-            letter-spacing: 0.01em !important;
-            color: #112741 !important;
-            margin-bottom: 0.45rem !important;
+            position: relative;
+            z-index: 2;
+            max-width: 1250px;
+            padding-top: 0.8rem;
+            padding-bottom: 2.2rem;
         }
 
         p, label, span, div, input, textarea {
             font-family: "Plus Jakarta Sans", sans-serif !important;
-            color: var(--text-main);
+            color: var(--text);
         }
 
-        [data-testid="stCaptionContainer"] p {
-            color: var(--text-dim) !important;
+        h1, h2, h3 {
+            font-family: "Outfit", sans-serif !important;
+            letter-spacing: -0.02em;
+            color: var(--text) !important;
         }
 
-        [data-testid="stSidebar"] * {
-            color: #20344d !important;
-        }
-
-        [data-testid="stSidebar"] [data-testid="stTextInput"] input {
-            background: #ffffff !important;
-            border: 1px solid var(--line) !important;
-            color: var(--text-main) !important;
-        }
-
-        [data-testid="stSidebar"] [data-testid="stButton"] > button {
-            color: #ffffff !important;
-        }
-
-        .space-brand {
+        .if-topbar {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border2);
+            border-radius: 16px;
+            background: var(--glass2);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 0.7rem;
-            margin-bottom: 0.8rem;
-            padding: 0.68rem 0.72rem;
-            border-radius: 14px;
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.88);
-            box-shadow: 0 8px 22px rgba(22, 56, 91, 0.09);
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(67, 97, 238, 0.08);
         }
 
-        .space-logo {
-            width: 44px;
-            height: 44px;
+        .if-topbar::before {
+            content: "";
+            position: absolute;
+            top: -80%;
+            left: -22%;
+            width: 22%;
+            height: 260%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0.55),
+                rgba(255, 255, 255, 0)
+            );
+            transform: translateX(-180%) rotate(18deg);
+            animation: ifTopbarBeam 9s linear infinite;
+            pointer-events: none;
+        }
+
+        .if-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .if-gem {
+            position: relative;
+            overflow: hidden;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
-            background: linear-gradient(145deg, #e0f3ff, #f0f8ff);
-            border: 1px solid var(--line-strong);
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 55%, var(--violet));
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .space-brand-title {
-            font-family: "Outfit", sans-serif !important;
-            font-size: 0.96rem;
-            color: #153450 !important;
-            line-height: 1.2;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(123, 47, 247, 0.35);
+            font-size: 1rem;
             font-weight: 700;
+            animation: ifGemBob 4s ease-in-out infinite, ifGemGlow 3.5s ease-in-out infinite;
         }
 
-        .space-brand-sub {
-            color: var(--text-dim) !important;
-            font-size: 0.8rem;
-            margin-top: 0.1rem;
+        .if-gem::after {
+            content: "";
+            position: absolute;
+            inset: -40% auto -40% -120%;
+            width: 70%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0.9),
+                rgba(255, 255, 255, 0)
+            );
+            transform: skewX(-18deg);
+            animation: ifGemSweep 4.4s ease-in-out infinite;
+            pointer-events: none;
         }
 
-        .hero-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.16rem;
-            animation: rise-fade 0.55s ease-out both;
-        }
-
-        .hero-logo {
-            width: 46px;
-            height: 46px;
-            border-radius: 13px;
-            background: linear-gradient(145deg, #ddf1ff, #f3fbff);
-            border: 1px solid var(--line-strong);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 8px 18px rgba(15, 65, 108, 0.1);
-        }
-
-        .hero-title-text {
+        .if-brand-title {
             font-family: "Outfit", sans-serif !important;
-            color: #0f2b45 !important;
+            font-size: 1.08rem;
             font-weight: 800;
-            font-size: clamp(1.75rem, 3vw, 2.35rem);
-            letter-spacing: 0.012em;
-            line-height: 1.06;
-            margin: 0;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet));
+            background-size: 220% 220%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: ifBrandShift 6s ease-in-out infinite;
         }
 
-        .hero-subtitle {
-            margin-top: 0.2rem;
-            color: var(--text-dim) !important;
-            font-size: 0.98rem;
-            max-width: 900px;
-            animation: rise-fade 0.72s ease-out both;
-        }
-
-        .hero-chip-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.45rem;
-            margin: 0.68rem 0 0.3rem 0;
-            animation: rise-fade 0.9s ease-out both;
-        }
-
-        .hero-chip {
-            border: 1px solid #c7ddf3;
-            border-radius: 999px;
-            padding: 0.24rem 0.62rem;
+        .if-brand-sub {
             font-size: 0.74rem;
-            color: #1a4368 !important;
-            background: rgba(255, 255, 255, 0.78);
+            font-family: "JetBrains Mono", monospace !important;
+            color: var(--muted) !important;
+            margin-top: 2px;
+            animation: ifSubPulse 3.2s ease-in-out infinite;
         }
 
-        .section-head {
-            margin: 0.2rem 0 0.8rem 0;
-            padding: 0.72rem 0.82rem;
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            background: rgba(255, 255, 255, 0.72);
-            box-shadow: 0 6px 22px rgba(18, 59, 97, 0.08);
-            animation: rise-fade 0.45s ease-out both;
+        .if-status {
+            border: 1px solid rgba(6, 214, 160, 0.35);
+            color: #059669 !important;
+            background: rgba(6, 214, 160, 0.08);
+            border-radius: 999px;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: "JetBrains Mono", monospace !important;
+            animation: ifStatusPulse 2.8s ease-in-out infinite;
         }
 
-        .section-title {
+        .if-hero {
+            border: 1px solid var(--border2);
+            border-radius: 22px;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(240, 244, 255, 0.48));
+            text-align: center;
+            padding: 2.1rem 1rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--sh);
+        }
+
+        .if-hero-gem {
+            width: 72px;
+            height: 72px;
+            border-radius: 22px;
+            margin: 0 auto 0.8rem;
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 50%, var(--violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.65rem;
+            box-shadow: 0 16px 42px rgba(123, 47, 247, 0.35);
+        }
+
+        .if-hero-title {
+            font-family: "Outfit", sans-serif !important;
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1.02;
+            background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet), var(--rose));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .if-hero-sub {
+            max-width: 760px;
+            margin: 0.5rem auto 0;
+            color: var(--muted) !important;
+            font-size: 0.96rem;
+        }
+
+        .if-badge-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 0.95rem;
+        }
+
+        .if-badge {
+            border: 1px solid var(--border2);
+            background: var(--white);
+            border-radius: 999px;
+            padding: 0.25rem 0.72rem;
+            font-size: 0.73rem;
+            color: var(--text2) !important;
+            box-shadow: 0 2px 10px rgba(67, 97, 238, 0.09);
+        }
+
+        .if-cap-head {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0.2rem 0 0.65rem;
+        }
+
+        .if-cap-head::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 120px;
+            height: 3px;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--blue), var(--indigo), var(--teal));
+            background-size: 200% 100%;
+            animation: ifBrandShift 4s linear infinite;
+        }
+
+        .if-cap-title {
+            font-family: "Outfit", sans-serif !important;
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            color: var(--text) !important;
+        }
+
+        .if-cap-title b {
+            color: var(--blue) !important;
+        }
+
+        .if-cap-sub {
+            color: var(--muted) !important;
+            font-size: 0.82rem;
+        }
+
+        .if-cap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 0.95rem;
+            perspective: 900px;
+        }
+
+        .if-cap-card {
+            position: relative;
+            overflow: hidden;
+            --card-delay: 0s;
+            border: 1px solid var(--border2);
+            border-radius: 18px;
+            background: var(--glass);
+            padding: 0.95rem;
+            box-shadow: var(--sh);
+            transition: box-shadow 0.25s ease, border-color 0.25s ease;
+            animation: ifCapReveal 0.65s ease-out both, ifCapFloat 7s ease-in-out infinite;
+            animation-delay: var(--card-delay), calc(1s + var(--card-delay));
+        }
+
+        .if-cap-card::before {
+            content: "";
+            position: absolute;
+            top: -35%;
+            left: -45%;
+            width: 35%;
+            height: 170%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0.45),
+                rgba(255, 255, 255, 0)
+            );
+            transform: translateX(-180%) rotate(18deg);
+            animation: ifCapShine 8s ease-in-out infinite;
+            animation-delay: calc(1.8s + var(--card-delay));
+            pointer-events: none;
+        }
+
+        .if-cap-card:hover {
+            border-color: rgba(67, 97, 238, 0.35);
+            box-shadow: 0 18px 36px rgba(67, 97, 238, 0.18);
+        }
+
+        .if-cap-card:nth-child(1) { --card-delay: 0.02s; }
+        .if-cap-card:nth-child(2) { --card-delay: 0.10s; }
+        .if-cap-card:nth-child(3) { --card-delay: 0.18s; }
+        .if-cap-card:nth-child(4) { --card-delay: 0.26s; }
+        .if-cap-card:nth-child(5) { --card-delay: 0.34s; }
+        .if-cap-card:nth-child(6) { --card-delay: 0.42s; }
+
+        .if-cap-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.14), rgba(123, 47, 247, 0.10));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.45rem;
+            animation: ifIconPulse 3.4s ease-in-out infinite;
+            animation-delay: var(--card-delay);
+        }
+
+        .if-cap-name {
             font-family: "Outfit", sans-serif !important;
             font-weight: 700;
-            color: #103252 !important;
-            font-size: 1.04rem;
-            margin-bottom: 0.1rem;
+            font-size: 0.92rem;
+            color: var(--text) !important;
         }
 
-        .section-sub {
-            color: var(--text-dim) !important;
-            font-size: 0.88rem;
+        .if-cap-desc {
+            font-size: 0.78rem;
+            color: var(--muted) !important;
+            line-height: 1.45;
+            margin-top: 0.15rem;
+        }
+
+        @keyframes ifTopbarBeam {
+            0% { transform: translateX(-180%) rotate(18deg); }
+            100% { transform: translateX(650%) rotate(18deg); }
+        }
+
+        @keyframes ifGemBob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(5deg); }
+        }
+
+        @keyframes ifGemGlow {
+            0%, 100% { box-shadow: 0 8px 22px rgba(123, 47, 247, 0.35); }
+            50% { box-shadow: 0 14px 30px rgba(67, 97, 238, 0.45); }
+        }
+
+        @keyframes ifGemSweep {
+            0% { transform: translateX(-180%) skewX(-18deg); opacity: 0; }
+            20% { opacity: 0.85; }
+            65% { opacity: 0.85; }
+            100% { transform: translateX(420%) skewX(-18deg); opacity: 0; }
+        }
+
+        @keyframes ifBrandShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes ifSubPulse {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes ifStatusPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.18); }
+            50% { box-shadow: 0 0 0 8px rgba(6, 214, 160, 0); }
+        }
+
+        @keyframes ifCapReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(14px) scale(0.98) rotateX(6deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotateX(0deg);
+            }
+        }
+
+        @keyframes ifCapFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes ifCapShine {
+            0% { transform: translateX(-200%) rotate(18deg); }
+            45% { transform: translateX(420%) rotate(18deg); }
+            100% { transform: translateX(420%) rotate(18deg); }
+        }
+
+        @keyframes ifIconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .if-topbar::before,
+            .if-gem,
+            .if-gem::after,
+            .if-brand-title,
+            .if-brand-sub,
+            .if-status,
+            .if-cap-head::after,
+            .if-cap-card,
+            .if-cap-card::before,
+            .if-cap-icon {
+                animation: none !important;
+            }
         }
 
         .dash-panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 16px;
+            border: 1px solid var(--border2);
+            border-radius: 18px;
+            background: var(--glass);
             padding: 16px;
-            margin: 0.5rem 0 1.05rem 0;
-            backdrop-filter: blur(6px);
-            box-shadow: var(--card-shadow);
-        }
-
-        .dash-title {
-            font-family: "Outfit", sans-serif !important;
-            font-weight: 700;
-            color: #11324f !important;
+            margin: 0.2rem 0 1rem;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--sh);
         }
 
         .dash-head {
@@ -239,14 +543,22 @@ def apply_futuristic_theme():
             gap: 10px;
         }
 
+        .dash-title {
+            font-family: "Outfit", sans-serif !important;
+            font-weight: 800;
+            color: var(--text) !important;
+            letter-spacing: -0.02em;
+        }
+
         .status-pill {
             border-radius: 999px;
-            padding: 4px 11px;
+            padding: 4px 10px;
             font-size: 0.7rem;
+            font-family: "JetBrains Mono", monospace !important;
             font-weight: 700;
-            border: 1px solid var(--line);
-            color: #1e3149 !important;
-            background: var(--panel-soft);
+            border: 1px solid var(--border2);
+            color: var(--text2) !important;
+            background: #f8fbff;
         }
 
         .dash-panel-grid {
@@ -257,180 +569,267 @@ def apply_futuristic_theme():
         }
 
         .dash-metric {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.88);
             padding: 10px 12px;
         }
 
         .dash-label {
-            color: var(--text-dim) !important;
-            font-size: 0.74rem;
+            color: var(--muted) !important;
+            font-size: 0.68rem;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.08em;
+            font-family: "JetBrains Mono", monospace !important;
         }
 
         .dash-value {
-            color: #1f2d3d !important;
-            font-size: 1.1rem;
-            margin-top: 0.18rem;
+            color: var(--text) !important;
+            font-size: 1rem;
+            margin-top: 0.2rem;
             font-weight: 800;
+            word-break: break-word;
         }
 
-        .status-ok {
-            color: var(--good) !important;
-            background: rgba(22, 163, 74, 0.10);
-            border-color: rgba(22, 163, 74, 0.26);
+        .section-head {
+            margin: 0.2rem 0 0.75rem;
+            padding: 0.8rem 0.9rem;
+            border-radius: 14px;
+            border: 1px solid var(--border2);
+            background: var(--glass);
+            box-shadow: var(--sh);
         }
 
-        .status-bad {
-            color: var(--warn) !important;
-            background: rgba(217, 119, 6, 0.10);
-            border-color: rgba(217, 119, 6, 0.26);
+        .section-title {
+            font-family: "Outfit", sans-serif !important;
+            font-weight: 800;
+            color: var(--text) !important;
+            font-size: 1.02rem;
+            letter-spacing: -0.01em;
+        }
+
+        .section-sub {
+            color: var(--muted) !important;
+            font-size: 0.84rem;
+            margin-top: 2px;
+        }
+
+        .if-upload-shell, .if-recent-shell {
+            border: 1px solid var(--border2);
+            border-radius: 18px;
+            background: var(--glass);
+            box-shadow: var(--sh);
+        }
+
+        .if-upload-head, .if-recent-head {
+            padding: 0.95rem 1rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.56);
+        }
+
+        .if-upload-title, .if-recent-title {
+            font-family: "Outfit", sans-serif !important;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text) !important;
+        }
+
+        .if-upload-sub, .if-recent-sub {
+            font-size: 0.77rem;
+            color: var(--muted) !important;
+            margin-top: 2px;
+        }
+
+        .if-upload-body, .if-recent-body {
+            padding: 1rem;
+        }
+
+        .if-recent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .if-mini {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 8px;
+            text-align: center;
+        }
+
+        .if-mini-val {
+            font-family: "Outfit", sans-serif !important;
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text) !important;
+        }
+
+        .if-mini-lbl {
+            color: var(--light) !important;
+            font-size: 0.62rem;
+            letter-spacing: 0.08em;
+            font-family: "JetBrains Mono", monospace !important;
+        }
+
+        .if-recent-item {
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: rgba(255, 255, 255, 0.78);
+            padding: 7px 9px;
+            margin-bottom: 7px;
+        }
+
+        .if-recent-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text2) !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .if-recent-meta {
+            font-size: 0.68rem;
+            color: var(--light) !important;
+            font-family: "JetBrains Mono", monospace !important;
+            margin-top: 1px;
+        }
+
+        .if-recent-state {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 0.66rem;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-family: "JetBrains Mono", monospace !important;
+            font-weight: 600;
+            border: 1px solid var(--border2);
+            background: rgba(67, 97, 238, 0.08);
+            color: var(--blue) !important;
         }
 
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
-            border-bottom: 1px solid var(--line);
-            padding-bottom: 8px;
+            border: 1px solid var(--border2);
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 13px;
+            padding: 4px;
         }
 
         .stTabs [data-baseweb="tab"] {
-            background: rgba(255, 255, 255, 0.72);
-            border: 1px solid var(--line);
             border-radius: 10px;
-            color: var(--text-dim) !important;
-            padding: 8px 14px;
+            color: var(--muted) !important;
+            font-weight: 600;
             transition: all 0.2s ease;
+            border: none;
+            font-family: "Outfit", sans-serif !important;
         }
 
         .stTabs [aria-selected="true"] {
-            color: #0f416f !important;
-            border: 1px solid var(--line-strong);
-            background: #ecf6ff;
-            box-shadow: 0 4px 12px rgba(11, 73, 130, 0.12);
+            background: linear-gradient(135deg, var(--blue), var(--indigo));
+            color: #fff !important;
+            box-shadow: 0 6px 18px rgba(67, 97, 238, 0.3);
         }
 
         .stButton > button {
-            border: 1px solid var(--accent-c);
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
-            color: #ffffff;
+            border-radius: 12px;
+            border: none;
             font-weight: 700;
             letter-spacing: 0.01em;
-            box-shadow: 0 6px 16px rgba(18, 100, 186, 0.25);
-            transition: filter 0.15s ease, transform 0.15s ease;
+            background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet));
+            color: #fff;
+            box-shadow: 0 8px 28px rgba(67, 97, 238, 0.28);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
         .stButton > button:hover {
-            filter: brightness(0.97);
             transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(18, 100, 186, 0.28);
-        }
-
-        .stButton > button:focus:not(:active) {
-            border-color: var(--accent-c);
-            box-shadow: 0 0 0 0.16rem rgba(14, 165, 233, 0.22);
+            box-shadow: 0 14px 34px rgba(67, 97, 238, 0.34);
         }
 
         .stTextInput input,
         .stTextArea textarea,
         div[data-baseweb="select"] > div,
         .stMultiSelect div[data-baseweb="select"] > div {
-            background: #ffffff !important;
-            border: 1px solid var(--line) !important;
-            border-radius: 10px !important;
-            color: var(--text-main) !important;
-        }
-
-        .stTextInput input:focus,
-        .stTextArea textarea:focus {
-            border-color: #84b8f3 !important;
-            box-shadow: 0 0 0 0.14rem rgba(14, 165, 233, 0.15) !important;
-        }
-
-        .stCheckbox, .stRadio {
-            background: transparent;
-        }
-
-        .stMarkdown p, .stMarkdown li, .stMarkdown span {
-            color: var(--text-main) !important;
+            background: #fff !important;
+            border: 1px solid var(--border2) !important;
+            border-radius: 11px !important;
+            color: var(--text) !important;
         }
 
         div[data-testid="stFileUploader"] {
-            border: 1px dashed var(--line-strong);
-            border-radius: 12px;
+            border: 2px dashed rgba(67, 97, 238, 0.26);
+            border-radius: 14px;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.58);
+            background: rgba(255, 255, 255, 0.72);
         }
 
         div[data-testid="stAlert"] {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            background: #ffffff;
+            border: 1px solid var(--border2);
+            border-radius: 12px;
+            background: #fff;
         }
 
         div[data-testid="stDataFrame"],
         div[data-testid="stTable"] {
-            border: 1px solid var(--line);
-            border-radius: 10px;
+            border: 1px solid var(--border2);
+            border-radius: 12px;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.92);
         }
 
         div[data-testid="stProgressBar"] div[role="progressbar"] {
-            background: linear-gradient(90deg, var(--accent-a), var(--accent-b)) !important;
-        }
-
-        [data-testid="stMetric"] {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 0.35rem 0.65rem;
-            background: rgba(255, 255, 255, 0.82);
+            background: linear-gradient(90deg, var(--blue), var(--indigo)) !important;
         }
 
         code, pre {
             border-radius: 8px !important;
-            border: 1px solid var(--line) !important;
-            background: #f5f8fd !important;
-            color: #1f2d3d !important;
+            border: 1px solid var(--border) !important;
+            background: #f8faff !important;
+            color: var(--text) !important;
         }
 
-        @keyframes rise-fade {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 900px) {
-            .dash-panel-grid {
+        @media (max-width: 1024px) {
+            .if-cap-grid {
                 grid-template-columns: 1fr;
             }
 
-            h1 {
-                font-size: 1.55rem !important;
+            .dash-panel-grid {
+                grid-template-columns: 1fr 1fr;
             }
+        }
 
-            .dash-head {
+        @media (max-width: 780px) {
+            .if-topbar {
                 flex-direction: column;
                 align-items: flex-start;
             }
 
-            .hero-logo {
-                width: 40px;
-                height: 40px;
+            .if-badge-row {
+                gap: 6px;
             }
 
-            .hero-chip-row {
-                margin-top: 0.52rem;
+            .dash-panel-grid {
+                grid-template-columns: 1fr;
             }
         }
         </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_live_background():
+    st.markdown(
+        """
+        <div class="if-live-bg" aria-hidden="true">
+          <div class="if-aurora a1"></div>
+          <div class="if-aurora a2"></div>
+          <div class="if-aurora a3"></div>
+          <div class="if-grid-fog"></div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
@@ -466,31 +865,75 @@ def render_sidebar_brand():
 def render_main_header():
     st.markdown(
         """
-        <div class="hero-title-wrap">
-          <div class="hero-logo">
-            <svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="logo_grad_main" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#37ddff"/>
-                  <stop offset="100%" stop-color="#4386ff"/>
-                </linearGradient>
-              </defs>
-              <polygon points="50,5 88,28 88,72 50,95 12,72 12,28" fill="none" stroke="url(#logo_grad_main)" stroke-width="6"/>
-              <path d="M50 22 L73 78 L61 78 L56 66 L44 66 L39 78 L27 78 Z" fill="url(#logo_grad_main)"/>
-              <rect x="43" y="50" width="14" height="7" fill="#071a31"/>
-            </svg>
+        <div class="if-topbar">
+          <div class="if-brand">
+            <div class="if-gem">&#9889;</div>
+            <div>
+              <div class="if-brand-title">InvoiceFlow</div>
+              <div class="if-brand-sub">workspace / upload-extract</div>
+            </div>
           </div>
-          <div class="hero-title-text">Invoice Processing Dashboard</div>
+          <div class="if-status">ONLINE</div>
         </div>
-        <div class="hero-subtitle">
-          Upload files, trigger OCR extraction, manually review fields, and export structured output from one clean workspace.
+        <div class="if-hero">
+          <div class="if-hero-gem">AI</div>
+          <div class="if-hero-title">InvoiceFlow</div>
+          <div class="if-hero-sub">
+            The intelligent invoice processing workspace. Upload, extract, review, and export structured data with production-grade reliability.
+          </div>
+          <div class="if-badge-row">
+            <span class="if-badge">OCR Extraction</span>
+            <span class="if-badge">Batch Processing</span>
+            <span class="if-badge">Smart Review</span>
+            <span class="if-badge">Instant Export</span>
+            <span class="if-badge">Live Analytics</span>
+          </div>
         </div>
-        <div class="hero-chip-row">
-          <span class="hero-chip">Upload</span>
-          <span class="hero-chip">Processing</span>
-          <span class="hero-chip">Manual Review</span>
-          <span class="hero-chip">Export</span>
-          <span class="hero-chip">History</span>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_capability_cards():
+    st.markdown(
+        """
+        <div class="if-cap-head">
+          <div>
+            <div class="if-cap-title"><b>Platform</b> Capabilities</div>
+            <div class="if-cap-sub">Everything InvoiceFlow does for you, visualized and production-ready.</div>
+          </div>
+        </div>
+        <div class="if-cap-grid">
+          <div class="if-cap-card">
+            <div class="if-cap-icon">OCR</div>
+            <div class="if-cap-name">AI OCR Extraction</div>
+            <div class="if-cap-desc">Extracts vendor, dates, amounts, taxes, and line-items from scanned invoices.</div>
+          </div>
+          <div class="if-cap-card">
+            <div class="if-cap-icon">UP</div>
+            <div class="if-cap-name">Batch Upload</div>
+            <div class="if-cap-desc">Upload many files or full zip folders and process them in one workflow.</div>
+          </div>
+          <div class="if-cap-card">
+            <div class="if-cap-icon">REV</div>
+            <div class="if-cap-name">Smart Review</div>
+            <div class="if-cap-desc">Automatic review context with editable JSON and confidence visibility.</div>
+          </div>
+          <div class="if-cap-card">
+            <div class="if-cap-icon">EXP</div>
+            <div class="if-cap-name">Export Ready</div>
+            <div class="if-cap-desc">Generate JSON, CSV, and Excel outputs directly from reviewed invoices.</div>
+          </div>
+          <div class="if-cap-card">
+            <div class="if-cap-icon">OPS</div>
+            <div class="if-cap-name">Live Status</div>
+            <div class="if-cap-desc">Backend health, active invoice, and operational state are visible in real time.</div>
+          </div>
+          <div class="if-cap-card">
+            <div class="if-cap-icon">SEC</div>
+            <div class="if-cap-name">Secure Pipeline</div>
+            <div class="if-cap-desc">Controlled upload/review/export flow with backend validation and traceability.</div>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -514,7 +957,7 @@ def render_dashboard_panel(backend_ok: bool, backend_status: str):
     backend_class = "status-ok" if backend_ok else "status-bad"
     backend_label = "ONLINE" if backend_ok else "OFFLINE"
     uploaded_count = len(st.session_state.last_uploads)
-    history_count = len(st.session_state.history or [])
+    active_invoice = st.session_state.active_invoice_id or "-"
     started_at = st.session_state.get("backend_started_at")
     uptime = format_duration(time.time() - started_at) if started_at else "n/a"
     panel = f"""
@@ -533,8 +976,8 @@ def render_dashboard_panel(backend_ok: bool, backend_status: str):
           <div class="dash-value">{uploaded_count}</div>
         </div>
         <div class="dash-metric">
-          <div class="dash-label">History Rows</div>
-          <div class="dash-value">{history_count}</div>
+          <div class="dash-label">Active Invoice</div>
+          <div class="dash-value">{active_invoice}</div>
         </div>
         <div class="dash-metric">
           <div class="dash-label">Backend Uptime</div>
@@ -586,6 +1029,50 @@ def start_processing_for_upload(invoice_id: str, use_cache: bool) -> Dict[str, A
     return payload
 
 
+def set_active_invoice(invoice_id: str):
+    st.session_state.active_invoice_id = invoice_id
+    st.session_state.export_id = invoice_id
+    if st.session_state.get("review_loaded_invoice_id") != invoice_id:
+        st.session_state.review_details = None
+        st.session_state.review_json = ""
+        st.session_state.review_loaded_invoice_id = None
+        st.session_state.review_load_error = None
+
+
+def load_review_details_for_invoice(invoice_id: str) -> Tuple[bool, Optional[str]]:
+    res = get_json(f"{st.session_state.base_url}/review/{invoice_id}/details")
+    if isinstance(res, dict) and res.get("_error"):
+        message = f"Backend not reachable: {res['_error']}"
+        st.session_state.review_details = None
+        st.session_state.review_json = ""
+        st.session_state.review_loaded_invoice_id = invoice_id
+        st.session_state.review_load_error = message
+        return False, message
+
+    data = response_payload(res)
+    if getattr(res, "status_code", None) == 200:
+        if not isinstance(data, dict):
+            message = "Unexpected review response format."
+            st.session_state.review_details = None
+            st.session_state.review_json = ""
+            st.session_state.review_loaded_invoice_id = invoice_id
+            st.session_state.review_load_error = message
+            return False, message
+        st.session_state.review_details = data
+        st.session_state.review_json = json.dumps(data.get("extracted_data", {}), indent=2)
+        st.session_state.review_loaded_invoice_id = invoice_id
+        st.session_state.review_load_error = None
+        return True, None
+
+    detail = data.get("detail") if isinstance(data, dict) else data
+    message = str(detail)
+    st.session_state.review_details = None
+    st.session_state.review_json = ""
+    st.session_state.review_loaded_invoice_id = invoice_id
+    st.session_state.review_load_error = message
+    return False, message
+
+
 def upload_invoice_entries(
     entries: List[Tuple[str, bytes, str]],
     auto_process: bool,
@@ -596,29 +1083,60 @@ def upload_invoice_entries(
     progress = st.progress(0.0) if total else None
 
     for index, (name, content, mime) in enumerate(entries, start=1):
+        uploaded_at = time.time()
         res = upload_single_file(st.session_state.base_url, name, content, mime)
         if isinstance(res, dict) and res.get("_error"):
             results.append({"file": name, "status": "error", "data": res["_error"], "processing": None})
+            st.session_state.upload_activity.insert(
+                0,
+                {
+                    "file": name,
+                    "invoice_id": "-",
+                    "status": "failed",
+                    "uploaded_at": uploaded_at,
+                    "detail": str(res["_error"]),
+                },
+            )
         else:
             data = response_payload(res)
+            status_code = getattr(res, "status_code", "error")
             invoice_id = data.get("invoice_id") if isinstance(data, dict) else None
             if invoice_id:
                 st.session_state.last_uploads.append(invoice_id)
+                set_active_invoice(invoice_id)
             processing: Optional[Dict[str, Any]] = None
-            if auto_process and getattr(res, "status_code", None) == 200 and invoice_id:
+            if auto_process and status_code == 200 and invoice_id:
                 processing = start_processing_for_upload(invoice_id, use_cache)
 
             results.append(
                 {
                     "file": name,
-                    "status": getattr(res, "status_code", "error"),
+                    "status": status_code,
                     "data": data,
                     "processing": processing,
                 }
             )
+            processing_state = "queued"
+            if isinstance(processing, dict):
+                if processing.get("error"):
+                    processing_state = "processing_failed"
+                elif processing.get("status"):
+                    processing_state = str(processing.get("status"))
+            st.session_state.upload_activity.insert(
+                0,
+                {
+                    "file": name,
+                    "invoice_id": invoice_id or "-",
+                    "status": "done" if isinstance(status_code, int) and 200 <= status_code < 300 else f"failed ({status_code})",
+                    "uploaded_at": uploaded_at,
+                    "detail": processing_state if auto_process else "uploaded",
+                },
+            )
 
         if progress:
             progress.progress(index / total)
+
+    st.session_state.upload_activity = st.session_state.upload_activity[:20]
 
     if progress:
         progress.empty()
@@ -679,6 +1197,85 @@ def render_upload_results(results: List[Dict[str, Any]], auto_process: bool):
         st.json(results)
 
 
+def relative_time_text(timestamp: Optional[float]) -> str:
+    if not timestamp:
+        return "just now"
+    diff = max(0, int(time.time() - timestamp))
+    if diff < 60:
+        return f"{diff}s ago"
+    if diff < 3600:
+        return f"{diff // 60}m ago"
+    if diff < 86400:
+        return f"{diff // 3600}h ago"
+    return f"{diff // 86400}d ago"
+
+
+def render_recent_upload_panel():
+    activity = st.session_state.upload_activity or []
+    completed = sum(1 for item in activity if str(item.get("status", "")).startswith("done"))
+    running = sum(
+        1
+        for item in activity
+        if str(item.get("detail", "")).lower() in {"processing", "queued"}
+    )
+    failed = sum(1 for item in activity if "failed" in str(item.get("status", "")).lower())
+
+    rows: List[str] = []
+    for item in activity[:8]:
+        file_name = html.escape(str(item.get("file") or "uploaded_file"))
+        invoice_id = html.escape(str(item.get("invoice_id") or "-"))
+        status = html.escape(str(item.get("status") or "unknown"))
+        when = relative_time_text(item.get("uploaded_at"))
+        rows.append(
+            f"""
+            <div class="if-recent-item">
+              <div class="if-recent-name">{file_name}</div>
+              <div class="if-recent-meta">{when} · {invoice_id}</div>
+              <span class="if-recent-state">{status}</span>
+            </div>
+            """
+        )
+
+    if not rows:
+        rows.append(
+            """
+            <div class="if-recent-item">
+              <div class="if-recent-name">No files uploaded yet</div>
+              <div class="if-recent-meta">Upload from the left panel to see live activity</div>
+            </div>
+            """
+        )
+
+    st.markdown(
+        f"""
+        <div class="if-recent-shell">
+          <div class="if-recent-head">
+            <div class="if-recent-title">Recent Files</div>
+            <div class="if-recent-sub">Latest processed invoices in this session</div>
+          </div>
+          <div class="if-recent-body">
+            <div class="if-recent-grid">
+              <div class="if-mini">
+                <div class="if-mini-val">{completed}</div>
+                <div class="if-mini-lbl">DONE</div>
+              </div>
+              <div class="if-mini">
+                <div class="if-mini-val">{running}</div>
+                <div class="if-mini-lbl">RUNNING</div>
+              </div>
+              <div class="if-mini">
+                <div class="if-mini-val">{failed}</div>
+                <div class="if-mini-lbl">FAILED</div>
+              </div>
+            </div>
+            {''.join(rows)}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def init_state():
     if "base_url" not in st.session_state:
         st.session_state.base_url = "http://localhost:8000/api"
@@ -688,8 +1285,18 @@ def init_state():
         st.session_state.review_details = None
     if "review_json" not in st.session_state:
         st.session_state.review_json = ""
+    if "review_loaded_invoice_id" not in st.session_state:
+        st.session_state.review_loaded_invoice_id = None
+    if "review_load_error" not in st.session_state:
+        st.session_state.review_load_error = None
     if "last_uploads" not in st.session_state:
         st.session_state.last_uploads = []
+    if "upload_activity" not in st.session_state:
+        st.session_state.upload_activity = []
+    if "active_invoice_id" not in st.session_state:
+        st.session_state.active_invoice_id = None
+    if "export_id" not in st.session_state:
+        st.session_state.export_id = ""
     if "process_status" not in st.session_state:
         st.session_state.process_status = None
     if "backend_proc" not in st.session_state:
@@ -706,7 +1313,7 @@ def api_headers() -> dict:
 def root_url(base_url: str) -> str:
     return base_url[:-4] if base_url.endswith("/api") else base_url
 
-def check_backend(base_url: str, timeout: float = 5.0) -> Tuple[bool, str]:
+def check_backend(base_url: str, timeout: float = 10.0) -> Tuple[bool, str]:
     try:
         res = requests.get(f"{root_url(base_url)}/health", timeout=timeout)
         if res.status_code == 200:
@@ -744,9 +1351,9 @@ def auto_start_backend():
     if not ok:
         return
     # Wait briefly for the server to come up
-    for _ in range(10):
-        time.sleep(0.5)
-        ok, status = check_backend(st.session_state.base_url, timeout=2.0)
+    for _ in range(30):
+        time.sleep(1.0)
+        ok, status = check_backend(st.session_state.base_url, timeout=3.0)
         if ok:
             st.session_state.backend_ok = True
             st.session_state.backend_status = status
@@ -776,7 +1383,7 @@ def get_json(url: str, timeout: float = 15.0):
 def upload_single_file(base_url: str, filename: str, content: bytes, content_type: str):
     files = {"files": (filename, content, content_type)}
     try:
-        return requests.post(f"{base_url}/invoices/upload", headers=api_headers(), files=files)
+        return requests.post(f"{base_url}/invoices/upload", headers=api_headers(), files=files, timeout=60)
     except RequestException as e:
         return {"_error": str(e)}
 
@@ -799,59 +1406,80 @@ def build_files_from_zip(zip_bytes: bytes) -> List[Tuple[str, bytes, str]]:
 def render_upload():
     render_section_intro(
         "Upload Invoices",
-        "Add single files or zip folders, then optionally queue processing automatically.",
+        "Add single files or zip folders. Processing starts automatically after upload.",
     )
+    st.markdown(
+        """
+        <div class="if-upload-shell">
+          <div class="if-upload-head">
+            <div class="if-upload-title">Upload Invoices</div>
+            <div class="if-upload-sub">Batch files or zip folders. OCR extraction starts immediately.</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    left_col, right_col = st.columns([2, 1], gap="large")
+    auto_process = True
+    results: Optional[List[Dict[str, Any]]] = None
 
-    selector_col, hint_col = st.columns([2, 1])
-    with selector_col:
-        mode = st.radio("Upload Mode", ["Batch files", "Folder (zip)"], horizontal=True, key="upload_mode")
-    with hint_col:
-        st.caption("Supported: PDF, PNG, JPG, JPEG, TIF, TIFF")
-        st.caption("Zip mode is useful for full invoice batches.")
+    with left_col:
+        selector_col, hint_col = st.columns([2, 1], gap="small")
+        with selector_col:
+            mode = st.radio("Upload Mode", ["Batch files", "Folder (zip)"], horizontal=True, key="upload_mode")
+        with hint_col:
+            st.caption("Supported: PDF, PNG, JPG, JPEG, TIF, TIFF, ZIP")
+            st.caption("Production mode: auto-process ON")
 
-    option_col_1, option_col_2 = st.columns(2)
-    with option_col_1:
-        auto_process = st.checkbox("Auto-start processing after upload", value=True, key="upload_auto_process")
-    with option_col_2:
         use_cache = st.checkbox("Use cache for processing", value=True, key="upload_use_cache")
 
-    if mode == "Batch files":
-        files = st.file_uploader(
-            "Select files",
-            type=["pdf", "png", "jpg", "jpeg", "tif", "tiff"],
-            accept_multiple_files=True,
-            key="upload_batch_files",
-        )
-        if st.button("Upload Selected Files", use_container_width=True, type="primary", key="upload_batch_button"):
-            if not files:
-                st.warning("Please select at least one file.")
-                return
-            entries = [
-                (f.name, f.getvalue(), f.type or "application/octet-stream")
-                for f in files
-            ]
-            results = upload_invoice_entries(entries, auto_process=auto_process, use_cache=use_cache)
-            render_upload_results(results, auto_process=auto_process)
-    else:
-        zip_file = st.file_uploader(
-            "Upload a zip file containing invoices",
-            type=["zip"],
-            key="upload_zip_file",
-        )
-        if st.button("Upload Zip Contents", use_container_width=True, type="primary", key="upload_zip_button"):
-            if not zip_file:
-                st.warning("Please select a zip file.")
-                return
-            try:
-                extracted = build_files_from_zip(zip_file.getvalue())
-            except Exception as e:
-                st.error(f"Failed to read zip: {e}")
-                return
-            if not extracted:
-                st.warning("No files found in zip.")
-                return
-            results = upload_invoice_entries(extracted, auto_process=auto_process, use_cache=use_cache)
-            render_upload_results(results, auto_process=auto_process)
+        if mode == "Batch files":
+            files = st.file_uploader(
+                "Select invoice files",
+                type=["pdf", "png", "jpg", "jpeg", "tif", "tiff"],
+                accept_multiple_files=True,
+                key="upload_batch_files",
+            )
+            clicked = st.button("Upload Selected Files", use_container_width=True, type="primary", key="upload_batch_button")
+            if clicked:
+                if not files:
+                    st.warning("Please select at least one file.")
+                else:
+                    entries = [(f.name, f.getvalue(), f.type or "application/octet-stream") for f in files]
+                    results = upload_invoice_entries(entries, auto_process=auto_process, use_cache=use_cache)
+        else:
+            zip_file = st.file_uploader(
+                "Upload a zip file containing invoices",
+                type=["zip"],
+                key="upload_zip_file",
+            )
+            clicked = st.button("Upload Zip Contents", use_container_width=True, type="primary", key="upload_zip_button")
+            if clicked:
+                if not zip_file:
+                    st.warning("Please select a zip file.")
+                else:
+                    try:
+                        extracted = build_files_from_zip(zip_file.getvalue())
+                    except Exception as e:
+                        st.error(f"Failed to read zip: {e}")
+                        extracted = []
+                    if not extracted:
+                        st.warning("No files found in zip.")
+                    else:
+                        results = upload_invoice_entries(extracted, auto_process=auto_process, use_cache=use_cache)
+
+    with right_col:
+        render_recent_upload_panel()
+
+    if results:
+        render_upload_results(results, auto_process=auto_process)
+        active_invoice = st.session_state.get("active_invoice_id")
+        if active_invoice:
+            loaded, _ = load_review_details_for_invoice(active_invoice)
+            if loaded:
+                st.success(f"Review data is ready for invoice {active_invoice}.")
+            else:
+                st.info("Review data will appear automatically in Review once processing completes.")
 
 
 def render_processing():
@@ -925,37 +1553,55 @@ def render_processing():
 def render_review():
     render_section_intro(
         "Manual Review",
-        "Load extracted invoice data, make corrections, and submit approval with notes.",
+        "Review extracted invoice data automatically from your uploaded files.",
     )
-    invoice_id = st.text_input("Invoice ID", key="review_id", placeholder="Enter invoice ID")
+    uploaded_ids = [invoice_id for invoice_id in reversed(st.session_state.last_uploads) if invoice_id]
+    uploaded_ids = list(dict.fromkeys(uploaded_ids))
+    if not uploaded_ids:
+        st.info("Upload at least one invoice from the Upload tab to start review.")
+        return
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Load Details", use_container_width=True, type="primary", key="load_review_btn"):
-            if not invoice_id:
-                st.warning("Please enter an invoice ID.")
-                return
-            res = get_json(f"{st.session_state.base_url}/review/{invoice_id}/details")
-            if isinstance(res, dict) and res.get("_error"):
-                st.error(f"Backend not reachable: {res['_error']}")
-                return
-            data = response_payload(res)
-            if res.status_code == 200:
-                if not isinstance(data, dict):
-                    st.error("Unexpected review response format.")
-                    return
-                st.session_state.review_details = data
-                st.session_state.review_json = json.dumps(data.get("extracted_data", {}), indent=2)
-            else:
-                st.error(data)
-    with col2:
+    active_invoice = st.session_state.get("active_invoice_id")
+    if active_invoice not in uploaded_ids:
+        active_invoice = uploaded_ids[0]
+        set_active_invoice(active_invoice)
+
+    selector_col, action_col1, action_col2 = st.columns([2, 1, 1])
+    with selector_col:
+        selected_invoice = st.selectbox(
+            "Uploaded Invoice",
+            uploaded_ids,
+            index=uploaded_ids.index(active_invoice),
+            key="review_invoice_selector",
+        )
+
+    if selected_invoice != st.session_state.active_invoice_id:
+        set_active_invoice(selected_invoice)
+
+    invoice_id = st.session_state.active_invoice_id
+    if (
+        st.session_state.get("review_loaded_invoice_id") != invoice_id
+        or st.session_state.get("review_details") is None
+    ):
+        load_review_details_for_invoice(invoice_id)
+
+    with action_col1:
+        if st.button("Refresh Details", use_container_width=True, type="primary", key="refresh_review_btn"):
+            load_review_details_for_invoice(invoice_id)
+    with action_col2:
         if st.button("Clear Review", use_container_width=True, key="clear_review_btn"):
             st.session_state.review_details = None
             st.session_state.review_json = ""
+            st.session_state.review_loaded_invoice_id = None
+            st.session_state.review_load_error = None
 
     details = st.session_state.review_details
     if not details:
-        st.info("Load invoice details to review extracted data.")
+        st.info(f"Review data for invoice {invoice_id} is not ready yet.")
+        last_error = st.session_state.get("review_load_error")
+        if last_error:
+            st.caption(f"Latest status: {last_error}")
+        st.caption("Processing starts automatically in Upload. Click Refresh Details after a few seconds.")
         return
 
     if not isinstance(details, dict):
@@ -963,7 +1609,8 @@ def render_review():
         return
 
     if details.get("invoice_id") != invoice_id:
-        st.info("Loaded details do not match the current invoice ID. Reload details.")
+        st.info("Loaded details were stale. Refreshing for selected invoice.")
+        load_review_details_for_invoice(invoice_id)
         return
 
     extracted_data = details.get("extracted_data", {})
@@ -997,9 +1644,6 @@ def render_review():
     approved = st.checkbox("Approve invoice", value=True, key="review_approved")
 
     if st.button("Submit Review", use_container_width=True, type="primary", key="submit_review_btn"):
-        if not invoice_id:
-            st.warning("Please enter an invoice ID.")
-            return
         try:
             edited_data = json.loads(edited_json) if edited_json.strip() else {}
         except Exception as e:
@@ -1045,6 +1689,8 @@ def render_export():
         "Export",
         "Generate a downloadable output for a single invoice in JSON, CSV, or Excel format.",
     )
+    if st.session_state.get("active_invoice_id") and not st.session_state.get("export_id"):
+        st.session_state.export_id = st.session_state.active_invoice_id
     input_col, format_col = st.columns([2, 1])
     with input_col:
         invoice_id = st.text_input("Invoice ID", key="export_id", placeholder="Enter invoice ID")
@@ -1170,8 +1816,9 @@ def main():
     st.set_page_config(page_title="Invoice Processing", layout="wide", initial_sidebar_state="collapsed")
     init_state()
     apply_futuristic_theme()
+    render_live_background()
     render_main_header()
-    st.caption("Operational workspace for invoice ingestion, extraction, human review, and export.")
+    render_capability_cards()
 
     backend_ok, backend_status = check_backend(st.session_state.base_url)
     st.session_state.backend_ok = backend_ok
@@ -1190,18 +1837,15 @@ def main():
         st.caption(f"Details: {st.session_state.get('backend_status')}")
         return
 
-    tabs = st.tabs(["Upload", "Processing", "Review", "Export", "History"])
+    tabs = st.tabs(["Upload", "Review", "Export"])
     with tabs[0]:
         render_upload()
     with tabs[1]:
-        render_processing()
-    with tabs[2]:
         render_review()
-    with tabs[3]:
+    with tabs[2]:
         render_export()
-    with tabs[4]:
-        render_history()
 
 
 if __name__ == "__main__":
     main()
+

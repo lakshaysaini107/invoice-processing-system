@@ -10,7 +10,7 @@ passlib[bcrypt]>=1.7.4
 python-jose[cryptography]>=3.3.0
 
 # Database drivers
-motor>=3.3.0  # MongoDB async driver
+aiomysql>=0.2.0
 
 # File handling
 aiofiles>=23.2.0
