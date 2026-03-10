@@ -1,4 +1,4 @@
-import html
+﻿import html
 import io
 import json
 import mimetypes
@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import requests
 from requests.exceptions import RequestException
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 def apply_futuristic_theme():
@@ -41,6 +42,11 @@ def apply_futuristic_theme():
             --gold: #f59e0b;
             --sh: 0 10px 30px rgba(67, 97, 238, 0.12);
             --sh-lg: 0 24px 64px rgba(67, 97, 238, 0.18);
+            --motion-fast: 0.25s;
+        }
+
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+            scroll-behavior: smooth;
         }
 
         [data-testid="stAppViewContainer"] {
@@ -50,7 +56,33 @@ def apply_futuristic_theme():
                 radial-gradient(760px 320px at -10% -8%, rgba(245, 158, 11, 0.16), transparent 65%),
                 radial-gradient(640px 290px at 105% 10%, rgba(45, 212, 191, 0.20), transparent 64%),
                 radial-gradient(560px 280px at 35% 98%, rgba(251, 113, 133, 0.16), transparent 62%),
-                var(--bg);
+                linear-gradient(135deg, #eef2ff, #f8f9ff, #e9eeff);
+            background-size: auto, auto, auto, 220% 220%;
+            animation: ifBgShift 18s ease-in-out infinite alternate;
+        }
+
+        [data-testid="stApp"] {
+            animation: ifPageFadeIn 0.7s ease both;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(217, 225, 255, 0.42);
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(67, 97, 238, 0.55), rgba(123, 47, 247, 0.6));
+            border-radius: 999px;
+            border: 2px solid rgba(240, 244, 255, 0.95);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(67, 97, 238, 0.8), rgba(123, 47, 247, 0.82));
         }
 
         .if-live-bg {
@@ -97,6 +129,15 @@ def apply_futuristic_theme():
             animation: ifFloatC 22s ease-in-out infinite alternate;
         }
 
+        .if-aurora.a4 {
+            width: 28vmax;
+            height: 28vmax;
+            left: 46vw;
+            top: 16vh;
+            background: radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.46), rgba(244, 114, 182, 0) 70%);
+            animation: ifFloatB 18s ease-in-out infinite alternate-reverse;
+        }
+
         .if-grid-fog {
             position: absolute;
             inset: -8%;
@@ -129,6 +170,230 @@ def apply_futuristic_theme():
             100% { transform: translate3d(-72px, -72px, 0); }
         }
 
+        @keyframes ifBgShift {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        @keyframes ifPageFadeIn {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 8px, 0);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes ifNavDrop {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, -10px, 0);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes ifCardRise {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 14px, 0);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes ifStatusPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.18);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(6, 214, 160, 0);
+            }
+        }
+
+        @keyframes ifDotPulse {
+            0%, 100% {
+                opacity: 0.72;
+                transform: scale(0.92);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes ifLogoOrbit {
+            0%, 100% {
+                transform: rotate(-2deg) translateY(0);
+            }
+            50% {
+                transform: rotate(2deg) translateY(-2px);
+            }
+        }
+
+        @keyframes ifHeroFloat {
+            0%, 100% {
+                transform: translate3d(0, -6px, 0);
+            }
+            50% {
+                transform: translate3d(0, 6px, 0);
+            }
+        }
+
+        @keyframes ifBadgeWave {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        @keyframes ifGradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes ifBorderFlow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        @keyframes ifSlideInBottom {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 20px, 0);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes ifTabSlideX {
+            0% {
+                opacity: 0;
+                transform: translate3d(14px, 0, 0);
+            }
+            100% {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes ifShimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        @keyframes ifDropPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.18);
+            }
+            50% {
+                box-shadow: 0 0 0 14px rgba(67, 97, 238, 0);
+            }
+        }
+
+        @keyframes ifRipple {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.55;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.8);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ifDropRipple {
+            0% {
+                transform: translate(-50%, -50%) scale(0.2);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.4);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ifCapDocBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+
+        @keyframes ifCapScan {
+            0% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.95;
+            }
+            100% {
+                transform: translateY(34px);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes ifCapFileSlide {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+        }
+
+        @keyframes ifCapProgress {
+            0% { transform: scaleX(0.15); }
+            70%, 100% { transform: scaleX(1); }
+        }
+
+        @keyframes ifCapReviewPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes ifCapCheckPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.22);
+            }
+            50% {
+                transform: scale(1.08);
+                box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
+            }
+        }
+
+        @keyframes ifCapCorePop {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.06) rotate(3deg); }
+        }
+
+        @keyframes ifCapChipFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes ifCapChipFloatCenter {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-4px); }
+        }
+
+        @keyframes ifCapBarPulse {
+            0%, 100% { transform: scaleY(0.92); }
+            50% { transform: scaleY(1.08); }
+        }
+
+        @keyframes ifCapShieldPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.07); }
+        }
+
         [data-testid="stHeader"] {
             background: var(--glass2);
             border-bottom: 1px solid var(--border2);
@@ -146,7 +411,113 @@ def apply_futuristic_theme():
             z-index: 2;
             max-width: 1250px;
             padding-top: 0.8rem;
+            padding-left: 6.2rem;
             padding-bottom: 2.2rem;
+        }
+
+        .if-side-rail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 78px;
+            height: 100vh;
+            padding: 18px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: var(--glass2);
+            border-right: 1px solid var(--border2);
+            backdrop-filter: blur(28px);
+            z-index: 15;
+            box-shadow: 3px 0 20px rgba(67, 97, 238, 0.05);
+        }
+
+        .if-rail-logo {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .if-rail-gem {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 55%, var(--violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(123, 47, 247, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .if-rail-gem::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.18) 50%, transparent 70%);
+            animation: ifShimmer 3.5s linear infinite;
+        }
+
+        .if-rail-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
+            animation: ifDotPulse 2s ease-in-out infinite;
+        }
+
+        .if-rail-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--light);
+            font-family: "JetBrains Mono", monospace !important;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--motion-fast) ease, background-color var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .if-rail-item:hover {
+            background: rgba(67, 97, 238, 0.08);
+            color: var(--blue);
+            transform: scale(1.06);
+        }
+
+        .if-rail-item.on {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.14), rgba(123, 47, 247, 0.08));
+            color: var(--blue);
+            border-color: rgba(67, 97, 238, 0.22);
+            box-shadow: 0 4px 14px rgba(67, 97, 238, 0.18);
+        }
+
+        .if-rail-sep {
+            width: 30px;
+            height: 1px;
+            background: var(--border2);
+            margin: 6px 0;
+        }
+
+        .if-rail-bottom {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
         }
 
         p, label, span, div, input, textarea {
@@ -164,32 +535,29 @@ def apply_futuristic_theme():
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border2);
-            border-radius: 16px;
-            background: var(--glass2);
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.85rem;
+            border-radius: 18px;
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.76), rgba(245, 248, 255, 0.62));
+            backdrop-filter: blur(10px);
+            padding: 0.95rem 1.2rem;
+            min-height: 70px;
+            margin-bottom: 0.9rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
             box-shadow: 0 8px 24px rgba(67, 97, 238, 0.08);
+            animation: ifNavDrop 0.6s ease both;
+            will-change: transform, opacity;
+            position: sticky;
+            top: 0.4rem;
+            z-index: 12;
         }
 
         .if-topbar::before {
             content: "";
             position: absolute;
-            top: -80%;
-            left: -22%;
-            width: 22%;
-            height: 260%;
-            background: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0),
-                rgba(255, 255, 255, 0.55),
-                rgba(255, 255, 255, 0)
-            );
-            transform: translateX(-180%) rotate(18deg);
-            animation: ifTopbarBeam 9s linear infinite;
+            inset: 0;
+            background: linear-gradient(115deg, rgba(67, 97, 238, 0.08), rgba(123, 47, 247, 0.06) 48%, rgba(14, 165, 233, 0.05));
             pointer-events: none;
         }
 
@@ -201,37 +569,39 @@ def apply_futuristic_theme():
             z-index: 1;
         }
 
+        .if-brand-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
         .if-gem {
-            position: relative;
-            overflow: hidden;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
             background: linear-gradient(135deg, var(--blue), var(--indigo) 55%, var(--violet));
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
             box-shadow: 0 8px 22px rgba(123, 47, 247, 0.35);
-            font-size: 1rem;
-            font-weight: 700;
-            animation: ifGemBob 4s ease-in-out infinite, ifGemGlow 3.5s ease-in-out infinite;
+            overflow: hidden;
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, filter var(--motion-fast) ease;
+            will-change: transform, box-shadow;
+            transform: translateZ(0);
         }
 
-        .if-gem::after {
-            content: "";
-            position: absolute;
-            inset: -40% auto -40% -120%;
-            width: 70%;
-            background: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0),
-                rgba(255, 255, 255, 0.9),
-                rgba(255, 255, 255, 0)
-            );
-            transform: skewX(-18deg);
-            animation: ifGemSweep 4.4s ease-in-out infinite;
-            pointer-events: none;
+        .if-gem:hover {
+            transform: translateZ(0) scale(1.05);
+            box-shadow: 0 14px 34px rgba(123, 47, 247, 0.44);
+            filter: drop-shadow(0 0 8px rgba(80, 130, 255, 0.35));
+        }
+
+        .if-gem svg {
+            width: 28px;
+            height: 28px;
+            display: block;
         }
 
         .if-brand-title {
@@ -240,11 +610,9 @@ def apply_futuristic_theme():
             font-weight: 800;
             line-height: 1;
             background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet));
-            background-size: 220% 220%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: ifBrandShift 6s ease-in-out infinite;
         }
 
         .if-brand-sub {
@@ -252,7 +620,28 @@ def apply_futuristic_theme():
             font-family: "JetBrains Mono", monospace !important;
             color: var(--muted) !important;
             margin-top: 2px;
-            animation: ifSubPulse 3.2s ease-in-out infinite;
+        }
+
+        .if-brand-div {
+            width: 1px;
+            height: 34px;
+            background: var(--border2);
+            margin: 0 3px;
+        }
+
+        .if-page-tag {
+            font-size: 0.8rem;
+            color: var(--muted) !important;
+            font-weight: 500;
+        }
+
+        .if-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
         }
 
         .if-status {
@@ -260,11 +649,66 @@ def apply_futuristic_theme():
             color: #059669 !important;
             background: rgba(6, 214, 160, 0.08);
             border-radius: 999px;
-            padding: 0.3rem 0.7rem;
+            padding: 0.3rem 0.72rem;
             font-size: 0.72rem;
             font-weight: 700;
             font-family: "JetBrains Mono", monospace !important;
-            animation: ifStatusPulse 2.8s ease-in-out infinite;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.36rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .if-status::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35);
+            animation: ifDotPulse 2s ease-in-out infinite, ifStatusPulse 2s ease-in-out infinite;
+        }
+
+        .if-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid var(--border2);
+            background: var(--white);
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-family: "JetBrains Mono", monospace !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(67, 97, 238, 0.06);
+            transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+        }
+
+        .if-icon-btn:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+            transform: scale(1.05);
+        }
+
+        .if-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--blue), var(--indigo));
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(67, 97, 238, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: transform var(--motion-fast) ease;
+        }
+
+        .if-avatar:hover {
+            transform: scale(1.08);
         }
 
         .if-hero {
@@ -272,23 +716,87 @@ def apply_futuristic_theme():
             border-radius: 22px;
             background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(240, 244, 255, 0.48));
             text-align: center;
-            padding: 2.1rem 1rem 1.5rem;
+            padding: 2.4rem 1rem 1.7rem;
             margin-bottom: 1rem;
             box-shadow: var(--sh);
+            animation: ifCardRise 0.75s ease both;
+            will-change: transform, opacity;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .if-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 120% at 50% 0%, rgba(67, 97, 238, 0.08), transparent 66%);
+            pointer-events: none;
+        }
+
+        .if-hero-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .if-hero-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid rgba(67, 97, 238, 0.12);
+        }
+
+        .if-hero-ring:nth-child(1) {
+            width: 140px;
+            height: 140px;
+            animation: ifLogoOrbit 12s linear infinite;
+        }
+
+        .if-hero-ring:nth-child(2) {
+            width: 210px;
+            height: 210px;
+            border-style: dashed;
+            animation: ifLogoOrbit 20s linear infinite reverse;
+        }
+
+        .if-hero-ring:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            border-color: rgba(123, 47, 247, 0.08);
+            animation: ifLogoOrbit 30s linear infinite;
+        }
+
+        .if-hero-logo-wrap {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 0.25rem;
         }
 
         .if-hero-gem {
-            width: 72px;
-            height: 72px;
-            border-radius: 22px;
+            width: 90px;
+            height: 90px;
+            border-radius: 24px;
             margin: 0 auto 0.8rem;
             background: linear-gradient(135deg, var(--blue), var(--indigo) 50%, var(--violet));
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 1.65rem;
             box-shadow: 0 16px 42px rgba(123, 47, 247, 0.35);
+            animation: ifHeroFloat 5.8s ease-in-out infinite;
+        }
+
+        .if-hero-gem svg {
+            width: 56px;
+            height: 56px;
+            display: block;
         }
 
         .if-hero-title {
@@ -298,9 +806,11 @@ def apply_futuristic_theme():
             letter-spacing: -0.04em;
             line-height: 1.02;
             background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet), var(--rose));
+            background-size: 220% 220%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: ifCardRise 0.9s ease both, ifGradientFlow 7.8s ease infinite;
         }
 
         .if-hero-sub {
@@ -308,6 +818,8 @@ def apply_futuristic_theme():
             margin: 0.5rem auto 0;
             color: var(--muted) !important;
             font-size: 0.96rem;
+            position: relative;
+            z-index: 1;
         }
 
         .if-badge-row {
@@ -326,27 +838,39 @@ def apply_futuristic_theme():
             font-size: 0.73rem;
             color: var(--text2) !important;
             box-shadow: 0 2px 10px rgba(67, 97, 238, 0.09);
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease;
+            animation: ifBadgeWave 5.5s ease-in-out infinite;
+            will-change: transform, box-shadow;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            position: relative;
+            z-index: 1;
         }
 
+        .if-badge:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 26px rgba(67, 97, 238, 0.24);
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.16), rgba(123, 47, 247, 0.13));
+        }
+
+        .if-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .if-badge-dot.d1 { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+        .if-badge-dot.d2 { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+        .if-badge-dot.d3 { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+        .if-badge-dot.d4 { background: var(--indigo); box-shadow: 0 0 8px var(--indigo); }
+        .if-badge-dot.d5 { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
         .if-cap-head {
-            position: relative;
             display: flex;
             align-items: center;
             gap: 12px;
             margin: 0.2rem 0 0.65rem;
-        }
-
-        .if-cap-head::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: -8px;
-            width: 120px;
-            height: 3px;
-            border-radius: 99px;
-            background: linear-gradient(90deg, var(--blue), var(--indigo), var(--teal));
-            background-size: 200% 100%;
-            animation: ifBrandShift 4s linear infinite;
         }
 
         .if-cap-title {
@@ -371,53 +895,415 @@ def apply_futuristic_theme():
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 0.95rem;
-            perspective: 900px;
         }
 
         .if-cap-card {
             position: relative;
             overflow: hidden;
-            --card-delay: 0s;
             border: 1px solid var(--border2);
-            border-radius: 18px;
+            border-radius: 22px;
             background: var(--glass);
-            padding: 0.95rem;
             box-shadow: var(--sh);
-            transition: box-shadow 0.25s ease, border-color 0.25s ease;
-            animation: ifCapReveal 0.65s ease-out both, ifCapFloat 7s ease-in-out infinite;
-            animation-delay: var(--card-delay), calc(1s + var(--card-delay));
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+            opacity: 0;
+            transform: translate3d(0, 16px, 0);
+            animation: ifSlideInBottom 0.58s ease forwards;
+            will-change: transform, box-shadow, opacity;
         }
 
         .if-cap-card::before {
             content: "";
             position: absolute;
-            top: -35%;
-            left: -45%;
-            width: 35%;
-            height: 170%;
-            background: linear-gradient(
-                90deg,
-                rgba(255, 255, 255, 0),
-                rgba(255, 255, 255, 0.45),
-                rgba(255, 255, 255, 0)
-            );
-            transform: translateX(-180%) rotate(18deg);
-            animation: ifCapShine 8s ease-in-out infinite;
-            animation-delay: calc(1.8s + var(--card-delay));
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(130deg, rgba(67, 97, 238, 0.58), rgba(123, 47, 247, 0.52), rgba(14, 165, 233, 0.54));
+            background-size: 200% 100%;
+            opacity: 0;
             pointer-events: none;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: opacity var(--motion-fast) ease;
+        }
+
+        .if-cap-card:nth-child(1) { animation-delay: 0.1s; }
+        .if-cap-card:nth-child(2) { animation-delay: 0.2s; }
+        .if-cap-card:nth-child(3) { animation-delay: 0.3s; }
+        .if-cap-card:nth-child(4) { animation-delay: 0.4s; }
+        .if-cap-card:nth-child(5) { animation-delay: 0.5s; }
+        .if-cap-card:nth-child(6) { animation-delay: 0.6s; }
+
+        .if-cap-card:hover::before {
+            opacity: 1;
+            animation: ifBorderFlow 2.2s linear infinite;
         }
 
         .if-cap-card:hover {
-            border-color: rgba(67, 97, 238, 0.35);
-            box-shadow: 0 18px 36px rgba(67, 97, 238, 0.18);
+            transform: translateY(-6px);
+            box-shadow: 0 22px 42px rgba(67, 97, 238, 0.2);
         }
 
-        .if-cap-card:nth-child(1) { --card-delay: 0.02s; }
-        .if-cap-card:nth-child(2) { --card-delay: 0.10s; }
-        .if-cap-card:nth-child(3) { --card-delay: 0.18s; }
-        .if-cap-card:nth-child(4) { --card-delay: 0.26s; }
-        .if-cap-card:nth-child(5) { --card-delay: 0.34s; }
-        .if-cap-card:nth-child(6) { --card-delay: 0.42s; }
+        .if-cap-visual {
+            height: 132px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 14px;
+        }
+
+        .if-cap-visual.v1 { background: linear-gradient(135deg, #eef2ff, #e0e7ff); }
+        .if-cap-visual.v2 { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+        .if-cap-visual.v3 { background: linear-gradient(135deg, #fff7ed, #ffedd5); }
+        .if-cap-visual.v4 { background: linear-gradient(135deg, #fdf4ff, #fae8ff); }
+        .if-cap-visual.v5 { background: linear-gradient(135deg, #ecfeff, #cffafe); }
+        .if-cap-visual.v6 { background: linear-gradient(135deg, #fff1f2, #ffe4e6); }
+
+        .if-cap-label {
+            position: absolute;
+            right: 10px;
+            top: 8px;
+            font-family: "JetBrains Mono", monospace !important;
+            font-size: 0.58rem;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            opacity: 0.92;
+        }
+
+        .cap-ocr-wrap,
+        .cap-batch-list,
+        .cap-review-card,
+        .cap-export-scene,
+        .cap-live-chart,
+        .cap-sec-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cap-ocr-wrap {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .cap-ocr-doc {
+            position: relative;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 10px 10px 8px;
+            box-shadow: 0 8px 14px rgba(67, 97, 238, 0.12);
+            animation: ifCapDocBob 3s ease-in-out infinite;
+        }
+
+        .cap-ocr-scan {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            top: 10px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(67, 97, 238, 0), rgba(67, 97, 238, 0.9), rgba(67, 97, 238, 0));
+            animation: ifCapScan 2.5s ease-in-out infinite;
+        }
+
+        .cap-ocr-line {
+            height: 6px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #e0e7ff, #c7d2fe);
+            margin-bottom: 4px;
+        }
+
+        .cap-ocr-line.w1 { width: 88%; }
+        .cap-ocr-line.w2 { width: 60%; }
+        .cap-ocr-line.w3 { width: 94%; }
+        .cap-ocr-line.w4 { width: 54%; margin-bottom: 0; }
+
+        .cap-ocr-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .cap-pill {
+            font-family: "JetBrains Mono", monospace !important;
+            font-size: 0.55rem;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(67, 97, 238, 0.2);
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--text2);
+        }
+
+        .cap-batch-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .cap-batch-item {
+            display: grid;
+            grid-template-columns: 22px 1fr;
+            align-items: center;
+            gap: 8px;
+            border-radius: 9px;
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            background: rgba(255, 255, 255, 0.88);
+            padding: 7px 8px;
+            animation: ifCapFileSlide 2.3s ease-in-out infinite;
+        }
+
+        .cap-batch-item:nth-child(2) { animation-delay: 0.18s; }
+        .cap-batch-item:nth-child(3) { animation-delay: 0.36s; }
+
+        .cap-batch-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.25), rgba(14, 165, 233, 0.3));
+        }
+
+        .cap-batch-bar {
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(103, 232, 249, 0.28);
+            overflow: hidden;
+        }
+
+        .cap-batch-fill {
+            height: 100%;
+            border-radius: inherit;
+            transform-origin: left center;
+            background: linear-gradient(90deg, #06d6a0, #0ea5e9);
+            animation: ifCapProgress 2.1s ease-in-out infinite;
+        }
+
+        .cap-batch-item:nth-child(1) .cap-batch-fill { animation-delay: 0s; }
+        .cap-batch-item:nth-child(2) .cap-batch-fill { animation-delay: 0.2s; }
+        .cap-batch-item:nth-child(3) .cap-batch-fill { animation-delay: 0.4s; }
+
+        .cap-review-card {
+            max-width: 190px;
+            margin: 0 auto;
+            border-radius: 11px;
+            border: 1px solid rgba(245, 158, 11, 0.24);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 14px rgba(245, 158, 11, 0.13);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px;
+            animation: ifCapReviewPulse 2.9s ease-in-out infinite;
+        }
+
+        .cap-review-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cap-review-line {
+            flex: 1;
+            height: 6px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #fdba74, #f59e0b);
+            opacity: 0.75;
+            transform-origin: left center;
+        }
+
+        .cap-review-line.r2 { opacity: 0.62; transform: scaleX(0.78); }
+        .cap-review-line.r3 { opacity: 0.54; transform: scaleX(0.62); }
+
+        .cap-review-check {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            position: relative;
+            animation: ifCapCheckPulse 2.2s ease-in-out infinite;
+        }
+
+        .cap-review-check::after {
+            content: "";
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 6px;
+            height: 3px;
+            border-left: 2px solid #16a34a;
+            border-bottom: 2px solid #16a34a;
+            transform: rotate(-45deg);
+        }
+
+        .cap-export-scene {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cap-export-core {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(123, 47, 247, 0.18), rgba(176, 65, 255, 0.14));
+            border: 1px solid rgba(123, 47, 247, 0.25);
+            box-shadow: 0 6px 18px rgba(123, 47, 247, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "JetBrains Mono", monospace !important;
+            font-size: 0.62rem;
+            color: #6d28d9;
+            letter-spacing: 0.05em;
+            animation: ifCapCorePop 2.4s ease-in-out infinite;
+        }
+
+        .cap-export-chip {
+            position: absolute;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            background: rgba(255, 255, 255, 0.86);
+            font-family: "JetBrains Mono", monospace !important;
+            font-size: 0.54rem;
+            color: #6d28d9;
+            animation: ifCapChipFloat 2.6s ease-in-out infinite;
+        }
+
+        .cap-export-chip.c1 { left: 18px; top: 22px; animation-delay: 0s; }
+        .cap-export-chip.c2 { right: 16px; top: 20px; animation-delay: 0.25s; }
+        .cap-export-chip.c3 {
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            animation: ifCapChipFloatCenter 2.6s ease-in-out infinite;
+            animation-delay: 0.5s;
+        }
+
+        .cap-live-chart {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cap-live-bars {
+            height: 58px;
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .cap-live-bar {
+            flex: 1;
+            border-radius: 5px 5px 2px 2px;
+            min-width: 0;
+            background: linear-gradient(to top, #67e8f9, #0ea5e9);
+            transform-origin: bottom center;
+            animation: ifCapBarPulse 2.1s ease-in-out infinite;
+        }
+
+        .cap-live-bar.b1 { height: 45%; animation-delay: 0s; }
+        .cap-live-bar.b2 { height: 70%; animation-delay: 0.12s; }
+        .cap-live-bar.b3 { height: 54%; animation-delay: 0.24s; }
+        .cap-live-bar.b4 { height: 86%; animation-delay: 0.36s; }
+        .cap-live-bar.b5 { height: 62%; animation-delay: 0.48s; }
+        .cap-live-bar.b6 { height: 90%; animation-delay: 0.6s; }
+
+        .cap-live-spark {
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.8), rgba(14, 165, 233, 0.1));
+            background-size: 200% 100%;
+            animation: ifShimmer 2s linear infinite;
+        }
+
+        .cap-sec-scene {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cap-sec-shield {
+            width: 54px;
+            height: 58px;
+            background: linear-gradient(160deg, #f72585, #fb7185);
+            clip-path: polygon(50% 0%, 92% 18%, 86% 74%, 50% 100%, 14% 74%, 8% 18%);
+            position: relative;
+            box-shadow: 0 8px 18px rgba(247, 37, 133, 0.3);
+            animation: ifCapShieldPulse 2.4s ease-in-out infinite;
+        }
+
+        .cap-sec-lock {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 15px;
+            height: 12px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .cap-sec-lock::before {
+            content: "";
+            position: absolute;
+            left: 3px;
+            top: -6px;
+            width: 9px;
+            height: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            border-bottom: none;
+            border-radius: 7px 7px 0 0;
+        }
+
+        .cap-sec-bars {
+            width: 88%;
+            display: flex;
+            gap: 5px;
+        }
+
+        .cap-sec-bar {
+            flex: 1;
+            height: 6px;
+            border-radius: 4px;
+            background: rgba(247, 37, 133, 0.15);
+            overflow: hidden;
+        }
+
+        .cap-sec-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #f72585, #fb7185);
+            transform-origin: left center;
+            animation: ifCapProgress 2.3s ease-in-out infinite;
+        }
+
+        .cap-sec-bar:nth-child(2) .cap-sec-fill { animation-delay: 0.2s; }
+        .cap-sec-bar:nth-child(3) .cap-sec-fill { animation-delay: 0.4s; }
+
+        .if-cap-card:hover .cap-ocr-scan,
+        .if-cap-card:hover .cap-batch-fill,
+        .if-cap-card:hover .cap-live-bar,
+        .if-cap-card:hover .cap-sec-fill {
+            animation-duration: 1.6s;
+        }
+
+        .if-cap-body {
+            padding: 16px 18px 18px;
+        }
 
         .if-cap-icon {
             width: 34px;
@@ -428,8 +1314,14 @@ def apply_futuristic_theme():
             align-items: center;
             justify-content: center;
             margin-bottom: 0.45rem;
-            animation: ifIconPulse 3.4s ease-in-out infinite;
-            animation-delay: var(--card-delay);
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease;
+            will-change: transform;
+        }
+
+        .if-cap-card:hover .if-cap-icon {
+            transform: rotate(6deg) scale(1.08);
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.24), rgba(123, 47, 247, 0.2));
+            box-shadow: 0 12px 24px rgba(123, 47, 247, 0.24);
         }
 
         .if-cap-name {
@@ -446,86 +1338,6 @@ def apply_futuristic_theme():
             margin-top: 0.15rem;
         }
 
-        @keyframes ifTopbarBeam {
-            0% { transform: translateX(-180%) rotate(18deg); }
-            100% { transform: translateX(650%) rotate(18deg); }
-        }
-
-        @keyframes ifGemBob {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-3px) rotate(5deg); }
-        }
-
-        @keyframes ifGemGlow {
-            0%, 100% { box-shadow: 0 8px 22px rgba(123, 47, 247, 0.35); }
-            50% { box-shadow: 0 14px 30px rgba(67, 97, 238, 0.45); }
-        }
-
-        @keyframes ifGemSweep {
-            0% { transform: translateX(-180%) skewX(-18deg); opacity: 0; }
-            20% { opacity: 0.85; }
-            65% { opacity: 0.85; }
-            100% { transform: translateX(420%) skewX(-18deg); opacity: 0; }
-        }
-
-        @keyframes ifBrandShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes ifSubPulse {
-            0%, 100% { opacity: 0.75; }
-            50% { opacity: 1; }
-        }
-
-        @keyframes ifStatusPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.18); }
-            50% { box-shadow: 0 0 0 8px rgba(6, 214, 160, 0); }
-        }
-
-        @keyframes ifCapReveal {
-            0% {
-                opacity: 0;
-                transform: translateY(14px) scale(0.98) rotateX(6deg);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1) rotateX(0deg);
-            }
-        }
-
-        @keyframes ifCapFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-
-        @keyframes ifCapShine {
-            0% { transform: translateX(-200%) rotate(18deg); }
-            45% { transform: translateX(420%) rotate(18deg); }
-            100% { transform: translateX(420%) rotate(18deg); }
-        }
-
-        @keyframes ifIconPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .if-topbar::before,
-            .if-gem,
-            .if-gem::after,
-            .if-brand-title,
-            .if-brand-sub,
-            .if-status,
-            .if-cap-head::after,
-            .if-cap-card,
-            .if-cap-card::before,
-            .if-cap-icon {
-                animation: none !important;
-            }
-        }
-
         .dash-panel {
             border: 1px solid var(--border2);
             border-radius: 18px;
@@ -534,6 +1346,15 @@ def apply_futuristic_theme():
             margin: 0.2rem 0 1rem;
             backdrop-filter: blur(20px);
             box-shadow: var(--sh);
+            animation: ifSlideInBottom 0.62s ease both;
+            will-change: transform, opacity;
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+        }
+
+        .dash-panel:hover {
+            transform: translateY(-2px);
+            border-color: rgba(67, 97, 238, 0.3);
+            box-shadow: 0 20px 34px rgba(67, 97, 238, 0.14);
         }
 
         .dash-head {
@@ -559,6 +1380,35 @@ def apply_futuristic_theme():
             border: 1px solid var(--border2);
             color: var(--text2) !important;
             background: #f8fbff;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pill::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: ifDotPulse 2s ease-in-out infinite;
+        }
+
+        .status-pill.status-bad::before {
+            background: #ef4444;
+        }
+
+        .status-pill.status-ok {
+            color: #047857 !important;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.35);
+        }
+
+        .status-pill.status-bad {
+            color: #b91c1c !important;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.35);
         }
 
         .dash-panel-grid {
@@ -573,6 +1423,24 @@ def apply_futuristic_theme():
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.88);
             padding: 10px 12px;
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+            will-change: transform, box-shadow;
+            animation: ifSlideInBottom 0.52s ease both;
+        }
+
+        .dash-panel-grid .dash-metric:nth-child(1) { animation-delay: 0.1s; }
+        .dash-panel-grid .dash-metric:nth-child(2) { animation-delay: 0.2s; }
+        .dash-panel-grid .dash-metric:nth-child(3) { animation-delay: 0.3s; }
+        .dash-panel-grid .dash-metric:nth-child(4) { animation-delay: 0.4s; }
+
+        .dash-metric.dash-metric-health {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .dash-metric:hover {
+            transform: translateY(-4px);
+            border-color: rgba(67, 97, 238, 0.34);
+            box-shadow: 0 16px 28px rgba(67, 97, 238, 0.2);
         }
 
         .dash-label {
@@ -591,6 +1459,49 @@ def apply_futuristic_theme():
             word-break: break-word;
         }
 
+        .dash-live {
+            margin-top: 0.3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.36rem;
+            color: #059669 !important;
+            font-size: 0.66rem;
+            font-family: "JetBrains Mono", monospace !important;
+        }
+
+        .dash-live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.35);
+            animation: ifDotPulse 2s ease-in-out infinite, ifStatusPulse 2s ease-in-out infinite;
+        }
+
+        .dash-health-meter {
+            margin-top: 11px;
+        }
+
+        .dash-health-track {
+            width: 100%;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.24);
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.18);
+        }
+
+        .dash-health-fill {
+            height: 100%;
+            width: var(--health-target, 0%);
+            border-radius: inherit;
+            background: linear-gradient(90deg, rgba(67, 97, 238, 0.95), rgba(123, 47, 247, 0.95), rgba(6, 214, 160, 0.92));
+            background-size: 200% 100%;
+            animation: ifShimmer 2.8s linear infinite;
+            transform-origin: left center;
+            transition: width 0.6s ease;
+        }
+
         .section-head {
             margin: 0.2rem 0 0.75rem;
             padding: 0.8rem 0.9rem;
@@ -598,6 +1509,12 @@ def apply_futuristic_theme():
             border: 1px solid var(--border2);
             background: var(--glass);
             box-shadow: var(--sh);
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+        }
+
+        .section-head:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(67, 97, 238, 0.14);
         }
 
         .section-title {
@@ -619,6 +1536,14 @@ def apply_futuristic_theme():
             border-radius: 18px;
             background: var(--glass);
             box-shadow: var(--sh);
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+            will-change: transform;
+        }
+
+        .if-upload-shell:hover, .if-recent-shell:hover {
+            transform: translateY(-3px);
+            border-color: rgba(67, 97, 238, 0.28);
+            box-shadow: 0 18px 30px rgba(67, 97, 238, 0.16);
         }
 
         .if-upload-head, .if-recent-head {
@@ -657,6 +1582,32 @@ def apply_futuristic_theme():
             background: rgba(255, 255, 255, 0.75);
             padding: 8px;
             text-align: center;
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+            animation: ifSlideInBottom 0.52s ease both;
+        }
+
+        .if-mini:nth-child(1) { animation-delay: 0.1s; }
+        .if-mini:nth-child(2) { animation-delay: 0.2s; }
+        .if-mini:nth-child(3) { animation-delay: 0.3s; }
+
+        .if-mini.if-mini-done {
+            border-color: rgba(16, 185, 129, 0.34);
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08), 0 8px 18px rgba(16, 185, 129, 0.12);
+        }
+
+        .if-mini.if-mini-running {
+            border-color: rgba(245, 158, 11, 0.34);
+            box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.08), 0 8px 18px rgba(245, 158, 11, 0.12);
+        }
+
+        .if-mini.if-mini-failed {
+            border-color: rgba(239, 68, 68, 0.34);
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.08), 0 8px 18px rgba(239, 68, 68, 0.12);
+        }
+
+        .if-mini:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 24px rgba(67, 97, 238, 0.18);
         }
 
         .if-mini-val {
@@ -679,6 +1630,45 @@ def apply_futuristic_theme():
             background: rgba(255, 255, 255, 0.78);
             padding: 7px 9px;
             margin-bottom: 7px;
+            transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+            animation: ifSlideInBottom 0.45s ease both;
+        }
+
+        .if-recent-item:nth-child(1) { animation-delay: 0.08s; }
+        .if-recent-item:nth-child(2) { animation-delay: 0.16s; }
+        .if-recent-item:nth-child(3) { animation-delay: 0.24s; }
+        .if-recent-item:nth-child(4) { animation-delay: 0.32s; }
+        .if-recent-item:nth-child(5) { animation-delay: 0.40s; }
+        .if-recent-item:nth-child(6) { animation-delay: 0.48s; }
+        .if-recent-item:nth-child(7) { animation-delay: 0.56s; }
+        .if-recent-item:nth-child(8) { animation-delay: 0.64s; }
+        .if-recent-item:nth-child(9) { animation-delay: 0.72s; }
+        .if-recent-item:nth-child(10) { animation-delay: 0.80s; }
+
+        .if-recent-state.state-done {
+            color: #059669 !important;
+            border-color: rgba(16, 185, 129, 0.36);
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.24);
+        }
+
+        .if-recent-state.state-running {
+            color: #b45309 !important;
+            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.12);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.22);
+        }
+
+        .if-recent-state.state-failed {
+            color: #b91c1c !important;
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.12);
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.22);
+        }
+
+        .if-recent-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(67, 97, 238, 0.28);
         }
 
         .if-recent-name {
@@ -711,6 +1701,7 @@ def apply_futuristic_theme():
         }
 
         .stTabs [data-baseweb="tab-list"] {
+            position: relative;
             gap: 8px;
             border: 1px solid var(--border2);
             background: rgba(255, 255, 255, 0.92);
@@ -719,12 +1710,39 @@ def apply_futuristic_theme():
         }
 
         .stTabs [data-baseweb="tab"] {
+            position: relative;
+            overflow: hidden;
             border-radius: 10px;
             color: var(--muted) !important;
             font-weight: 600;
-            transition: all 0.2s ease;
+            transition: transform var(--motion-fast) ease, color var(--motion-fast) ease, background-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
             border: none;
             font-family: "Outfit", sans-serif !important;
+        }
+
+        .stTabs [data-baseweb="tab"]::after {
+            content: "";
+            position: absolute;
+            left: 18%;
+            right: 18%;
+            bottom: 5px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--blue), var(--indigo), var(--violet));
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform var(--motion-fast) ease;
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--blue) !important;
+            text-shadow: 0 0 10px rgba(67, 97, 238, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .stTabs [data-baseweb="tab"]:hover::after {
+            transform: scaleX(1);
         }
 
         .stTabs [aria-selected="true"] {
@@ -733,7 +1751,19 @@ def apply_futuristic_theme():
             box-shadow: 0 6px 18px rgba(67, 97, 238, 0.3);
         }
 
-        .stButton > button {
+        .stTabs [aria-selected="true"]::after {
+            transform: scaleX(1);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.55));
+        }
+
+        [data-testid="stTabs"] [role="tabpanel"] {
+            animation: ifTabSlideX 0.3s ease both;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button {
+            position: relative;
+            overflow: hidden;
             border-radius: 12px;
             border: none;
             font-weight: 700;
@@ -741,12 +1771,27 @@ def apply_futuristic_theme():
             background: linear-gradient(135deg, var(--blue), var(--indigo), var(--violet));
             color: #fff;
             box-shadow: 0 8px 28px rgba(67, 97, 238, 0.28);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, filter var(--motion-fast) ease;
         }
 
-        .stButton > button:hover {
-            transform: translateY(-1px);
+        .stButton > button:hover,
+        .stDownloadButton > button:hover {
+            transform: translateY(-2px);
             box-shadow: 0 14px 34px rgba(67, 97, 238, 0.34);
+            filter: brightness(1.02);
+        }
+
+        .stButton > button .if-ripple,
+        .stDownloadButton > button .if-ripple {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+            animation: ifRipple 0.7s ease-out forwards;
+            top: 0;
+            left: 0;
         }
 
         .stTextInput input,
@@ -757,13 +1802,66 @@ def apply_futuristic_theme():
             border: 1px solid var(--border2) !important;
             border-radius: 11px !important;
             color: var(--text) !important;
+            transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+        }
+
+        .stTextInput input:focus,
+        .stTextArea textarea:focus,
+        div[data-baseweb="select"] > div:focus-within,
+        .stMultiSelect div[data-baseweb="select"] > div:focus-within {
+            border-color: rgba(99, 102, 241, 0.58) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16) !important;
         }
 
         div[data-testid="stFileUploader"] {
+            position: relative;
+            overflow: hidden;
             border: 2px dashed rgba(67, 97, 238, 0.26);
             border-radius: 14px;
             padding: 10px;
             background: rgba(255, 255, 255, 0.72);
+            transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background var(--motion-fast) ease;
+            will-change: transform;
+        }
+
+        div[data-testid="stFileUploader"]::before {
+            content: "";
+            position: absolute;
+            inset: -35%;
+            background: radial-gradient(circle at center, rgba(67, 97, 238, 0.18), rgba(67, 97, 238, 0) 62%);
+            opacity: 0;
+            transition: opacity var(--motion-fast) ease;
+            pointer-events: none;
+        }
+
+        div[data-testid="stFileUploader"]:hover {
+            transform: scale(1.01);
+            border-color: rgba(67, 97, 238, 0.52);
+            box-shadow: 0 14px 30px rgba(67, 97, 238, 0.16);
+        }
+
+        div[data-testid="stFileUploader"]:hover::before,
+        div[data-testid="stFileUploader"].if-drag-active::before {
+            opacity: 1;
+        }
+
+        div[data-testid="stFileUploader"].if-drag-active {
+            border-color: rgba(67, 97, 238, 0.65);
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.13), rgba(123, 47, 247, 0.11), rgba(14, 165, 233, 0.1));
+            animation: ifDropPulse 1.8s ease-in-out infinite;
+        }
+
+        div[data-testid="stFileUploader"].if-drop-ripple::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 2px solid rgba(67, 97, 238, 0.38);
+            pointer-events: none;
+            animation: ifDropRipple 0.75s ease-out forwards;
         }
 
         div[data-testid="stAlert"] {
@@ -781,7 +1879,9 @@ def apply_futuristic_theme():
         }
 
         div[data-testid="stProgressBar"] div[role="progressbar"] {
-            background: linear-gradient(90deg, var(--blue), var(--indigo)) !important;
+            background: linear-gradient(90deg, var(--blue), var(--indigo), var(--violet), var(--teal)) !important;
+            background-size: 200% 100% !important;
+            animation: ifShimmer 2.6s linear infinite;
         }
 
         code, pre {
@@ -791,7 +1891,29 @@ def apply_futuristic_theme():
             color: var(--text) !important;
         }
 
+        [role="tooltip"] {
+            border: 1px solid rgba(100, 120, 255, 0.24);
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            animation: ifCardRise 0.2s ease both;
+        }
+
+        .if-motion-ready .if-reveal {
+            opacity: 0;
+            transform: translate3d(0, 16px, 0);
+            transition: opacity 0.52s ease, transform 0.52s ease;
+        }
+
+        .if-motion-ready .if-reveal.is-visible {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+
         @media (max-width: 1024px) {
+            .main .block-container {
+                padding-left: 5.4rem;
+            }
+
             .if-cap-grid {
                 grid-template-columns: 1fr;
             }
@@ -802,9 +1924,40 @@ def apply_futuristic_theme():
         }
 
         @media (max-width: 780px) {
+            .if-side-rail {
+                display: none;
+            }
+
+            .main .block-container {
+                padding-left: 0.8rem;
+            }
+
             .if-topbar {
                 flex-direction: column;
                 align-items: flex-start;
+                top: 0;
+            }
+
+            .if-brand-wrap {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .if-brand-div,
+            .if-page-tag {
+                display: none;
+            }
+
+            .if-top-actions {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .if-hero-gem {
+                width: 78px;
+                height: 78px;
             }
 
             .if-badge-row {
@@ -813,6 +1966,50 @@ def apply_futuristic_theme():
 
             .dash-panel-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+                scroll-behavior: auto;
+            }
+
+            .if-aurora,
+            .if-grid-fog,
+            .if-status,
+            .if-gem,
+            .if-hero-gem,
+            .if-badge,
+            .if-cap-card,
+            .if-topbar,
+            .if-hero,
+            .section-head,
+            .if-hero-title,
+            .dash-panel,
+            .dash-metric,
+            .if-mini,
+            .if-recent-item,
+            [data-testid="stTabs"] [role="tabpanel"],
+            div[data-testid="stProgressBar"] div[role="progressbar"] {
+                animation: none !important;
+            }
+
+            .if-motion-ready .if-reveal {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+
+            .if-cap-card {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+
+            .if-cap-visual *,
+            .if-cap-visual::before,
+            .if-cap-visual::after {
+                animation: none !important;
+                transition: none !important;
             }
         }
         </style>
@@ -828,10 +2025,230 @@ def render_live_background():
           <div class="if-aurora a1"></div>
           <div class="if-aurora a2"></div>
           <div class="if-aurora a3"></div>
+          <div class="if-aurora a4"></div>
           <div class="if-grid-fog"></div>
         </div>
         """,
         unsafe_allow_html=True,
+    )
+
+
+def render_side_rail():
+    st.markdown(
+        """
+        <nav class="if-side-rail" aria-hidden="true">
+          <div class="if-rail-logo">
+            <div class="if-rail-gem">
+              <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 3L7 15.5H13.5L12 25L21 12.5H14.5L16 3Z" fill="white" fill-opacity="0.95"/>
+                <rect x="4" y="6.5" width="4.5" height="1.4" rx=".7" fill="white" fill-opacity=".5"/>
+                <rect x="4" y="9.2" width="3" height="1.4" rx=".7" fill="white" fill-opacity=".32"/>
+                <rect x="20.5" y="17" width="3.5" height="1.4" rx=".7" fill="white" fill-opacity=".5"/>
+                <rect x="21" y="19.7" width="2.5" height="1.4" rx=".7" fill="white" fill-opacity=".32"/>
+              </svg>
+            </div>
+            <div class="if-rail-dot"></div>
+          </div>
+          <div class="if-rail-item on">HOME</div>
+          <div class="if-rail-item">INV</div>
+          <div class="if-rail-item">REV</div>
+          <div class="if-rail-item">EXP</div>
+          <div class="if-rail-sep"></div>
+          <div class="if-rail-item">ANL</div>
+          <div class="if-rail-bottom">
+            <div class="if-rail-item">SET</div>
+            <div class="if-rail-item">HLP</div>
+          </div>
+        </nav>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def inject_motion_runtime():
+    components.html(
+        """
+        <script>
+          (() => {
+            const host = window.parent;
+            const doc = host && host.document;
+            if (!doc) return;
+
+            const prefersReduced = host.matchMedia && host.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            doc.documentElement.classList.add("if-motion-ready");
+
+            const uploaderSelector = 'div[data-testid="stFileUploader"]';
+
+            const formatCount = (value, decimals) => {
+              if (decimals > 0) {
+                return Number(value).toFixed(decimals);
+              }
+              return String(Math.round(value));
+            };
+
+            const animateCount = (el) => {
+              const target = Number(el.dataset.countEnd);
+              if (!Number.isFinite(target)) return;
+              const decimals = Number(el.dataset.countDecimals || "0");
+              const prefix = el.dataset.countPrefix || "";
+              const suffix = el.dataset.countSuffix || "";
+              const signature = `${target}|${decimals}|${prefix}|${suffix}`;
+
+              if (el.dataset.countSignature === signature) return;
+              el.dataset.countSignature = signature;
+
+              if (prefersReduced) {
+                el.textContent = `${prefix}${formatCount(target, decimals)}${suffix}`;
+                return;
+              }
+
+              const start = host.performance.now();
+              const duration = 900;
+
+              const step = (timestamp) => {
+                const t = Math.min((timestamp - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - t, 3);
+                const current = target * eased;
+                el.textContent = `${prefix}${formatCount(current, decimals)}${suffix}`;
+                if (t < 1) {
+                  host.requestAnimationFrame(step);
+                }
+              };
+
+              host.requestAnimationFrame(step);
+            };
+
+            const runCountups = () => {
+              doc.querySelectorAll(".if-countup").forEach(animateCount);
+            };
+
+            if (!host.__ifRevealObserver && !prefersReduced && host.IntersectionObserver) {
+              host.__ifRevealObserver = new host.IntersectionObserver(
+                (entries) => {
+                  entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                      entry.target.classList.add("is-visible");
+                      host.__ifRevealObserver.unobserve(entry.target);
+                    }
+                  });
+                },
+                { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+              );
+            }
+
+            const observeReveals = () => {
+              const revealNodes = doc.querySelectorAll(".if-reveal");
+              if (prefersReduced) {
+                revealNodes.forEach((node) => node.classList.add("is-visible"));
+                return;
+              }
+
+              const observer = host.__ifRevealObserver;
+              if (!observer) {
+                revealNodes.forEach((node) => node.classList.add("is-visible"));
+                return;
+              }
+              revealNodes.forEach((node) => {
+                if (node.dataset.revealBound === "1") return;
+                node.dataset.revealBound = "1";
+                observer.observe(node);
+              });
+            };
+
+            const scheduleHydrate = () => {
+              if (host.__ifHydrateQueued) return;
+              host.__ifHydrateQueued = true;
+              host.requestAnimationFrame(() => {
+                host.__ifHydrateQueued = false;
+                observeReveals();
+                runCountups();
+              });
+            };
+
+            if (!host.__ifMotionMutationObserver) {
+              host.__ifMotionMutationObserver = new host.MutationObserver(() => {
+                scheduleHydrate();
+              });
+              host.__ifMotionMutationObserver.observe(doc.body, {
+                childList: true,
+                subtree: true,
+              });
+            }
+
+            if (!host.__ifRippleBound) {
+              doc.addEventListener(
+                "click",
+                (event) => {
+                  const button = event.target && event.target.closest(".stButton > button, .stDownloadButton > button");
+                  if (!button) return;
+
+                  const rect = button.getBoundingClientRect();
+                  const ripple = doc.createElement("span");
+                  ripple.className = "if-ripple";
+                  ripple.style.left = `${event.clientX - rect.left}px`;
+                  ripple.style.top = `${event.clientY - rect.top}px`;
+                  button.appendChild(ripple);
+                  host.setTimeout(() => ripple.remove(), 720);
+                },
+                true,
+              );
+              host.__ifRippleBound = true;
+            }
+
+            if (!host.__ifUploaderMotionBound) {
+              const clearDragState = () => {
+                doc.querySelectorAll(`${uploaderSelector}.if-drag-active`).forEach((node) => {
+                  node.classList.remove("if-drag-active");
+                });
+              };
+
+              doc.addEventListener(
+                "dragover",
+                (event) => {
+                  const uploader = event.target && event.target.closest(uploaderSelector);
+                  if (!uploader) return;
+                  uploader.classList.add("if-drag-active");
+                },
+                true,
+              );
+
+              doc.addEventListener(
+                "dragleave",
+                (event) => {
+                  const uploader = event.target && event.target.closest(uploaderSelector);
+                  if (!uploader) return;
+                  const related = event.relatedTarget;
+                  if (related && uploader.contains(related)) return;
+                  uploader.classList.remove("if-drag-active");
+                },
+                true,
+              );
+
+              doc.addEventListener(
+                "drop",
+                (event) => {
+                  const uploader = event.target && event.target.closest(uploaderSelector);
+                  if (uploader) {
+                    uploader.classList.remove("if-drag-active");
+                    uploader.classList.remove("if-drop-ripple");
+                    void uploader.offsetWidth;
+                    uploader.classList.add("if-drop-ripple");
+                    host.setTimeout(() => uploader.classList.remove("if-drop-ripple"), 760);
+                  }
+                  clearDragState();
+                },
+                true,
+              );
+
+              host.__ifUploaderMotionBound = true;
+            }
+
+            scheduleHydrate();
+          })();
+        </script>
+        """,
+        height=0,
+        width=0,
     )
 
 
@@ -842,18 +2259,25 @@ def render_sidebar_brand():
           <div class="space-logo">
             <svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <defs>
-                <linearGradient id="logo_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#37ddff"/>
-                  <stop offset="100%" stop-color="#4386ff"/>
+                <linearGradient id="if_side_doc" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f8fbff"/>
+                  <stop offset="100%" stop-color="#dbeafe"/>
+                </linearGradient>
+                <linearGradient id="if_side_stamp" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0ea5e9"/>
+                  <stop offset="100%" stop-color="#7b2ff7"/>
                 </linearGradient>
               </defs>
-              <polygon points="50,5 88,28 88,72 50,95 12,72 12,28" fill="none" stroke="url(#logo_grad)" stroke-width="6"/>
-              <path d="M50 22 L73 78 L61 78 L56 66 L44 66 L39 78 L27 78 Z" fill="url(#logo_grad)"/>
-              <rect x="43" y="50" width="14" height="7" fill="#071a31"/>
+              <path d="M30 10h28l16 16v46c0 6.6-5.4 12-12 12H30c-6.6 0-12-5.4-12-12V22c0-6.6 5.4-12 12-12Z" fill="url(#if_side_doc)"/>
+              <path d="M58 10v16h16" fill="none" stroke="#b8c7ff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="34" y="40" width="30" height="7" rx="3.5" fill="#5b21b6"/>
+              <rect x="34" y="53" width="24" height="7" rx="3.5" fill="#7c3aed"/>
+              <circle cx="63" cy="64" r="10" fill="url(#if_side_stamp)"/>
+              <path d="M63 58.8v10.4M57.8 64h10.4" stroke="#f8fafc" stroke-width="3.2" stroke-linecap="round"/>
             </svg>
           </div>
           <div>
-            <div class="space-brand-title">Invoice Intelligence AI</div>
+            <div class="space-brand-title">InvoiceFlow AI</div>
             <div class="space-brand-sub">Invoice Workspace</div>
           </div>
         </div>
@@ -866,27 +2290,87 @@ def render_main_header():
     st.markdown(
         """
         <div class="if-topbar">
-          <div class="if-brand">
-            <div class="if-gem">&#9889;</div>
-            <div>
-              <div class="if-brand-title">InvoiceFlow</div>
-              <div class="if-brand-sub">workspace / upload-extract</div>
+          <div class="if-brand-wrap">
+            <div class="if-brand">
+              <div class="if-gem" aria-hidden="true">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="if_logo_small_doc" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f8fbff"/>
+                      <stop offset="100%" stop-color="#dbeafe"/>
+                    </linearGradient>
+                    <linearGradient id="if_logo_small_stamp" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#0ea5e9"/>
+                      <stop offset="100%" stop-color="#7b2ff7"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M20 8h22l14 14v30c0 6.6-5.4 12-12 12H20c-6.6 0-12-5.4-12-12V20c0-6.6 5.4-12 12-12Z" fill="url(#if_logo_small_doc)"/>
+                  <path d="M42 8v14h14" fill="none" stroke="#b8c7ff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="24" y="30" width="20" height="4.4" rx="2.2" fill="#5b21b6"/>
+                  <rect x="24" y="38" width="15" height="4.4" rx="2.2" fill="#7c3aed"/>
+                  <circle cx="44" cy="44" r="6.6" fill="url(#if_logo_small_stamp)"/>
+                  <path d="M44 40.5v7M40.5 44h7" stroke="#f8fafc" stroke-width="2.1" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <div class="if-brand-title">InvoiceFlow</div>
+                <div class="if-brand-sub">workspace / upload-extract</div>
+              </div>
             </div>
+            <div class="if-brand-div"></div>
+            <div class="if-page-tag">Processing Dashboard</div>
           </div>
-          <div class="if-status">ONLINE</div>
+          <div class="if-top-actions">
+            <div class="if-status">ONLINE</div>
+            <div class="if-icon-btn">REF</div>
+            <div class="if-icon-btn">ALT</div>
+            <div class="if-icon-btn">FND</div>
+            <div class="if-avatar">AK</div>
+          </div>
         </div>
         <div class="if-hero">
-          <div class="if-hero-gem">AI</div>
+          <div class="if-hero-rings" aria-hidden="true">
+            <div class="if-hero-ring"></div>
+            <div class="if-hero-ring"></div>
+            <div class="if-hero-ring"></div>
+          </div>
+          <div class="if-hero-logo-wrap">
+            <div class="if-hero-gem" aria-hidden="true">
+              <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="if_logo_hero_doc" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f8fbff"/>
+                    <stop offset="100%" stop-color="#dbeafe"/>
+                  </linearGradient>
+                  <linearGradient id="if_logo_hero_line" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4361ee"/>
+                    <stop offset="100%" stop-color="#7b2ff7"/>
+                  </linearGradient>
+                  <linearGradient id="if_logo_hero_stamp" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#06d6a0"/>
+                    <stop offset="100%" stop-color="#0ea5e9"/>
+                  </linearGradient>
+                </defs>
+                <path d="M22 10h28l16 16v40c0 5.5-4.5 10-10 10H22c-5.5 0-10-4.5-10-10V20c0-5.5 4.5-10 10-10Z" fill="url(#if_logo_hero_doc)"/>
+                <path d="M50 10v16h16" fill="none" stroke="#bfd0ff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="27" y="34" width="25" height="5" rx="2.5" fill="url(#if_logo_hero_line)"/>
+                <rect x="27" y="43" width="19" height="5" rx="2.5" fill="#8b5cf6"/>
+                <rect x="27" y="52" width="15" height="5" rx="2.5" fill="#a78bfa"/>
+                <circle cx="55" cy="53" r="9" fill="url(#if_logo_hero_stamp)"/>
+                <path d="M55 47.5v11M49.5 53h11" stroke="#f8fafc" stroke-width="2.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
           <div class="if-hero-title">InvoiceFlow</div>
           <div class="if-hero-sub">
             The intelligent invoice processing workspace. Upload, extract, review, and export structured data with production-grade reliability.
           </div>
           <div class="if-badge-row">
-            <span class="if-badge">OCR Extraction</span>
-            <span class="if-badge">Batch Processing</span>
-            <span class="if-badge">Smart Review</span>
-            <span class="if-badge">Instant Export</span>
-            <span class="if-badge">Live Analytics</span>
+            <span class="if-badge"><span class="if-badge-dot d1"></span>OCR Extraction</span>
+            <span class="if-badge"><span class="if-badge-dot d2"></span>Batch Processing</span>
+            <span class="if-badge"><span class="if-badge-dot d3"></span>Smart Review</span>
+            <span class="if-badge"><span class="if-badge-dot d4"></span>Instant Export</span>
+            <span class="if-badge"><span class="if-badge-dot d5"></span>Live Analytics</span>
           </div>
         </div>
         """,
@@ -905,34 +2389,131 @@ def render_capability_cards():
         </div>
         <div class="if-cap-grid">
           <div class="if-cap-card">
-            <div class="if-cap-icon">OCR</div>
-            <div class="if-cap-name">AI OCR Extraction</div>
-            <div class="if-cap-desc">Extracts vendor, dates, amounts, taxes, and line-items from scanned invoices.</div>
+            <div class="if-cap-visual v1">
+              <div class="if-cap-label">OCR FLOW</div>
+              <div class="cap-ocr-wrap">
+                <div class="cap-ocr-doc">
+                  <div class="cap-ocr-scan"></div>
+                  <div class="cap-ocr-line w1"></div>
+                  <div class="cap-ocr-line w2"></div>
+                  <div class="cap-ocr-line w3"></div>
+                  <div class="cap-ocr-line w4"></div>
+                </div>
+                <div class="cap-ocr-tags">
+                  <span class="cap-pill">VENDOR</span>
+                  <span class="cap-pill">AMOUNT</span>
+                  <span class="cap-pill">DATE</span>
+                </div>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">OCR</div>
+              <div class="if-cap-name">AI OCR Extraction</div>
+              <div class="if-cap-desc">Extracts vendor, dates, amounts, taxes, and line-items from scanned invoices.</div>
+            </div>
           </div>
           <div class="if-cap-card">
-            <div class="if-cap-icon">UP</div>
-            <div class="if-cap-name">Batch Upload</div>
-            <div class="if-cap-desc">Upload many files or full zip folders and process them in one workflow.</div>
+            <div class="if-cap-visual v2">
+              <div class="if-cap-label">BATCH PIPELINE</div>
+              <div class="cap-batch-list">
+                <div class="cap-batch-item">
+                  <span class="cap-batch-dot"></span>
+                  <div class="cap-batch-bar"><span class="cap-batch-fill"></span></div>
+                </div>
+                <div class="cap-batch-item">
+                  <span class="cap-batch-dot"></span>
+                  <div class="cap-batch-bar"><span class="cap-batch-fill"></span></div>
+                </div>
+                <div class="cap-batch-item">
+                  <span class="cap-batch-dot"></span>
+                  <div class="cap-batch-bar"><span class="cap-batch-fill"></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">UP</div>
+              <div class="if-cap-name">Batch Upload</div>
+              <div class="if-cap-desc">Upload many files or full zip folders and process them in one workflow.</div>
+            </div>
           </div>
           <div class="if-cap-card">
-            <div class="if-cap-icon">REV</div>
-            <div class="if-cap-name">Smart Review</div>
-            <div class="if-cap-desc">Automatic review context with editable JSON and confidence visibility.</div>
+            <div class="if-cap-visual v3">
+              <div class="if-cap-label">REVIEW LOOP</div>
+              <div class="cap-review-card">
+                <div class="cap-review-row">
+                  <div class="cap-review-line r1"></div>
+                  <span class="cap-review-check"></span>
+                </div>
+                <div class="cap-review-row">
+                  <div class="cap-review-line r2"></div>
+                  <span class="cap-review-check"></span>
+                </div>
+                <div class="cap-review-row">
+                  <div class="cap-review-line r3"></div>
+                  <span class="cap-review-check"></span>
+                </div>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">REV</div>
+              <div class="if-cap-name">Smart Review</div>
+              <div class="if-cap-desc">Automatic review context with editable JSON and confidence visibility.</div>
+            </div>
           </div>
           <div class="if-cap-card">
-            <div class="if-cap-icon">EXP</div>
-            <div class="if-cap-name">Export Ready</div>
-            <div class="if-cap-desc">Generate JSON, CSV, and Excel outputs directly from reviewed invoices.</div>
+            <div class="if-cap-visual v4">
+              <div class="if-cap-label">EXPORT HUB</div>
+              <div class="cap-export-scene">
+                <div class="cap-export-core">EXP</div>
+                <span class="cap-export-chip c1">JSON</span>
+                <span class="cap-export-chip c2">CSV</span>
+                <span class="cap-export-chip c3">XLSX</span>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">EXP</div>
+              <div class="if-cap-name">Export Ready</div>
+              <div class="if-cap-desc">Generate JSON, CSV, and Excel outputs directly from reviewed invoices.</div>
+            </div>
           </div>
           <div class="if-cap-card">
-            <div class="if-cap-icon">OPS</div>
-            <div class="if-cap-name">Live Status</div>
-            <div class="if-cap-desc">Backend health, active invoice, and operational state are visible in real time.</div>
+            <div class="if-cap-visual v5">
+              <div class="if-cap-label">LIVE METRICS</div>
+              <div class="cap-live-chart">
+                <div class="cap-live-bars">
+                  <span class="cap-live-bar b1"></span>
+                  <span class="cap-live-bar b2"></span>
+                  <span class="cap-live-bar b3"></span>
+                  <span class="cap-live-bar b4"></span>
+                  <span class="cap-live-bar b5"></span>
+                  <span class="cap-live-bar b6"></span>
+                </div>
+                <div class="cap-live-spark"></div>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">OPS</div>
+              <div class="if-cap-name">Live Status</div>
+              <div class="if-cap-desc">Backend health, active invoice, and operational state are visible in real time.</div>
+            </div>
           </div>
           <div class="if-cap-card">
-            <div class="if-cap-icon">SEC</div>
-            <div class="if-cap-name">Secure Pipeline</div>
-            <div class="if-cap-desc">Controlled upload/review/export flow with backend validation and traceability.</div>
+            <div class="if-cap-visual v6">
+              <div class="if-cap-label">SECURE TRACE</div>
+              <div class="cap-sec-scene">
+                <div class="cap-sec-shield"><span class="cap-sec-lock"></span></div>
+                <div class="cap-sec-bars">
+                  <div class="cap-sec-bar"><span class="cap-sec-fill"></span></div>
+                  <div class="cap-sec-bar"><span class="cap-sec-fill"></span></div>
+                  <div class="cap-sec-bar"><span class="cap-sec-fill"></span></div>
+                </div>
+              </div>
+            </div>
+            <div class="if-cap-body">
+              <div class="if-cap-icon">SEC</div>
+              <div class="if-cap-name">Secure Pipeline</div>
+              <div class="if-cap-desc">Controlled upload/review/export flow with backend validation and traceability.</div>
+            </div>
           </div>
         </div>
         """,
@@ -956,6 +2537,8 @@ def format_duration(seconds: Optional[float]) -> str:
 def render_dashboard_panel(backend_ok: bool, backend_status: str):
     backend_class = "status-ok" if backend_ok else "status-bad"
     backend_label = "ONLINE" if backend_ok else "OFFLINE"
+    backend_health_text = "HEALTHY" if backend_ok else "UNHEALTHY"
+    health_percent = 100 if backend_ok else 32
     uploaded_count = len(st.session_state.last_uploads)
     active_invoice = st.session_state.active_invoice_id or "-"
     started_at = st.session_state.get("backend_started_at")
@@ -967,13 +2550,14 @@ def render_dashboard_panel(backend_ok: bool, backend_status: str):
         <div class="status-pill {backend_class}">{backend_label}</div>
       </div>
       <div class="dash-panel-grid">
-        <div class="dash-metric">
-          <div class="dash-label">Backend</div>
-          <div class="dash-value">{backend_status}</div>
+        <div class="dash-metric dash-metric-health">
+          <div class="dash-label">Backend Healthy</div>
+          <div class="dash-value if-countup" data-count-end="{health_percent}" data-count-decimals="0" data-count-suffix="%">{health_percent}%</div>
+          <div class="dash-live"><span class="dash-live-dot"></span>{backend_health_text} | {html.escape(str(backend_status))}</div>
         </div>
         <div class="dash-metric">
           <div class="dash-label">Uploaded IDs</div>
-          <div class="dash-value">{uploaded_count}</div>
+          <div class="dash-value if-countup" data-count-end="{uploaded_count}" data-count-decimals="0">{uploaded_count}</div>
         </div>
         <div class="dash-metric">
           <div class="dash-label">Active Invoice</div>
@@ -982,6 +2566,12 @@ def render_dashboard_panel(backend_ok: bool, backend_status: str):
         <div class="dash-metric">
           <div class="dash-label">Backend Uptime</div>
           <div class="dash-value">{uptime}</div>
+        </div>
+      </div>
+      <div class="dash-health-meter">
+        <div class="dash-label">System Health</div>
+        <div class="dash-health-track">
+          <div class="dash-health-fill" style="--health-target:{health_percent}%;"></div>
         </div>
       </div>
       <div class="dash-label" style="margin-top:10px;">Live sync with backend endpoint and session state telemetry.</div>
@@ -993,7 +2583,7 @@ def render_dashboard_panel(backend_ok: bool, backend_status: str):
 def render_section_intro(title: str, subtitle: str):
     st.markdown(
         f"""
-        <div class="section-head">
+        <div class="section-head if-reveal">
           <div class="section-title">{title}</div>
           <div class="section-sub">{subtitle}</div>
         </div>
@@ -1225,13 +2815,23 @@ def render_recent_upload_panel():
         file_name = html.escape(str(item.get("file") or "uploaded_file"))
         invoice_id = html.escape(str(item.get("invoice_id") or "-"))
         status = html.escape(str(item.get("status") or "unknown"))
+        status_text = str(item.get("status") or "").lower()
+        detail_text = str(item.get("detail") or "").lower()
+        if "fail" in status_text:
+            state_class = "state-failed"
+        elif "done" in status_text or "success" in status_text or "complete" in status_text:
+            state_class = "state-done"
+        elif detail_text in {"processing", "queued", "running"} or "run" in status_text or "queue" in status_text:
+            state_class = "state-running"
+        else:
+            state_class = ""
         when = relative_time_text(item.get("uploaded_at"))
         rows.append(
             f"""
             <div class="if-recent-item">
               <div class="if-recent-name">{file_name}</div>
-              <div class="if-recent-meta">{when} · {invoice_id}</div>
-              <span class="if-recent-state">{status}</span>
+              <div class="if-recent-meta">{when} | {invoice_id}</div>
+              <span class="if-recent-state {state_class}">{status}</span>
             </div>
             """
         )
@@ -1248,23 +2848,23 @@ def render_recent_upload_panel():
 
     st.markdown(
         f"""
-        <div class="if-recent-shell">
+        <div class="if-recent-shell if-reveal">
           <div class="if-recent-head">
             <div class="if-recent-title">Recent Files</div>
             <div class="if-recent-sub">Latest processed invoices in this session</div>
           </div>
           <div class="if-recent-body">
             <div class="if-recent-grid">
-              <div class="if-mini">
-                <div class="if-mini-val">{completed}</div>
+              <div class="if-mini if-mini-done">
+                <div class="if-mini-val if-countup" data-count-end="{completed}" data-count-decimals="0">{completed}</div>
                 <div class="if-mini-lbl">DONE</div>
               </div>
-              <div class="if-mini">
-                <div class="if-mini-val">{running}</div>
+              <div class="if-mini if-mini-running">
+                <div class="if-mini-val if-countup" data-count-end="{running}" data-count-decimals="0">{running}</div>
                 <div class="if-mini-lbl">RUNNING</div>
               </div>
-              <div class="if-mini">
-                <div class="if-mini-val">{failed}</div>
+              <div class="if-mini if-mini-failed">
+                <div class="if-mini-val if-countup" data-count-end="{failed}" data-count-decimals="0">{failed}</div>
                 <div class="if-mini-lbl">FAILED</div>
               </div>
             </div>
@@ -1410,7 +3010,7 @@ def render_upload():
     )
     st.markdown(
         """
-        <div class="if-upload-shell">
+        <div class="if-upload-shell if-reveal">
           <div class="if-upload-head">
             <div class="if-upload-title">Upload Invoices</div>
             <div class="if-upload-sub">Batch files or zip folders. OCR extraction starts immediately.</div>
@@ -1817,6 +3417,7 @@ def main():
     init_state()
     apply_futuristic_theme()
     render_live_background()
+    render_side_rail()
     render_main_header()
     render_capability_cards()
 
@@ -1832,6 +3433,7 @@ def main():
     render_dashboard_panel(st.session_state.backend_ok, st.session_state.backend_status)
 
     if not st.session_state.get("backend_ok", False):
+        inject_motion_runtime()
         st.error("Backend is offline. Start it on port 8000 and try again.")
         st.caption("Run: uvicorn backend.app.main:app --reload --port 8000")
         st.caption(f"Details: {st.session_state.get('backend_status')}")
@@ -1845,7 +3447,10 @@ def main():
     with tabs[2]:
         render_export()
 
+    inject_motion_runtime()
+
 
 if __name__ == "__main__":
     main()
+
 
