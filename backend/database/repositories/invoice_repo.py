@@ -162,7 +162,12 @@ class InvoiceRepository:
                 rows = await cur.fetchall()
         return [inv for inv in (self._row_to_invoice(row) for row in rows) if inv is not None]
 
-    async def update(self, invoice_id: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def update(
+        self,
+        invoice_id: str,
+        update_data: Dict[str, Any],
+        return_updated: bool = True,
+    ) -> Dict[str, Any]:
         field_map = {
             "user_id": "user_id",
             "filename": "filename",
@@ -220,6 +225,8 @@ class InvoiceRepository:
                     raise ValueError(f"Invoice not found: {invoice_id}")
 
         logger.info("Invoice updated: %s", invoice_id)
+        if not return_updated:
+            return {"invoice_id": invoice_id}
         updated = await self.get_by_id(invoice_id)
         if not updated:
             raise ValueError(f"Invoice not found: {invoice_id}")

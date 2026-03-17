@@ -46,9 +46,6 @@ class PreprocessingEngine:
             # 4. Light sharpening keeps characters crisp without destroying details
             image = await self._sharpen(image)
             logger.info("Sharpening applied")
-
-            # 5. Deskew again if needed
-            image = await self._correct_skew(image)
             
             return image
             
@@ -182,11 +179,9 @@ class PreprocessingEngine:
 
     async def _sharpen(self, image: np.ndarray) -> np.ndarray:
         """Sharpen image while preserving edges for OCR."""
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        denoised = cv2.fastNlMeansDenoising(gray, None, h=7, templateWindowSize=7, searchWindowSize=21)
-        blurred = cv2.GaussianBlur(denoised, (0, 0), 1.2)
-        sharpened = cv2.addWeighted(denoised, 1.7, blurred, -0.7, 0)
-        return cv2.cvtColor(sharpened, cv2.COLOR_GRAY2BGR)
+        # Unsharp mask directly on BGR image; avoids a second expensive denoise pass.
+        blurred = cv2.GaussianBlur(image, (0, 0), 1.1)
+        return cv2.addWeighted(image, 1.35, blurred, -0.35, 0)
 
     async def _binarize(self, image: np.ndarray) -> np.ndarray:
         """Convert to binary image for OCR"""

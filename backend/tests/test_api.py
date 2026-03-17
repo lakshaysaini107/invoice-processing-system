@@ -59,3 +59,44 @@ async def test_list_invoices(authenticated_client):
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_without_auth(async_client):
+    """With auth disabled, /auth/me should return a public user."""
+    response = await async_client.get("/api/auth/me")
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["email"] == "public@local"
+    assert data["role"] == "admin"
+
+
+@pytest.mark.asyncio
+async def test_process_status_defaults_current_step(authenticated_client, tmp_path):
+    """Processing status should return a fallback current_step when missing in DB."""
+    test_file = tmp_path / "status_invoice.pdf"
+    test_file.write_text("status invoice content")
+
+    with open(test_file, "rb") as f:
+        files = {"files": (f.name, f, "application/pdf")}
+        upload_response = await authenticated_client.post("/api/invoices/upload", files=files)
+
+    assert upload_response.status_code == status.HTTP_200_OK
+    invoice_id = upload_response.json()["invoice_id"]
+
+    response = await authenticated_client.get(f"/api/process/status/{invoice_id}")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["current_step"] == "initialization"
+
+
+@pytest.mark.asyncio
+async def test_upload_invoice_without_auth(async_client, tmp_path):
+    """With auth disabled, uploads should work without Authorization headers."""
+    test_file = tmp_path / "public_invoice.pdf"
+    test_file.write_text("public invoice content")
+
+    with open(test_file, "rb") as f:
+        files = {"files": (f.name, f, "application/pdf")}
+        response = await async_client.post("/api/invoices/upload", files=files)
+
+    assert response.status_code == status.HTTP_200_OK

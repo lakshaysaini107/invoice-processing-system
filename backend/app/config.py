@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     """Application settings from .env file"""
 
     # Application
-    APP_NAME: str = "Invoice Processing System"
+    APP_NAME: str = "invoiceflow"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     ENVIRONMENT: str = "development" # development, staging, production

@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import importlib.util
 import pytesseract
 import cv2
 import numpy as np
@@ -16,15 +17,19 @@ class OCREngine:
     def __init__(self, use_paddle: bool = True):
         self.use_paddle = use_paddle
         self.paddle_ocr = None
-        if use_paddle:
+        if use_paddle and self._paddle_runtime_available():
             try:
+                # Skip remote model source reachability checks on startup.
+                os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
                 from paddleocr import PaddleOCR  # lazy import
-                self.paddle_ocr = PaddleOCR(use_angle_cls=True, lang='en')
+                self.paddle_ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
             except Exception as e:
                 logger.warning(
                     f"PaddleOCR not available, falling back to Tesseract. Reason: {str(e)}"
                 )
                 self.use_paddle = False
+        elif use_paddle:
+            self.use_paddle = False
 
         # Configure Tesseract path (optional)
         self.tesseract_cmd = self._resolve_tesseract_cmd()
@@ -41,6 +46,15 @@ class OCREngine:
         # Tesseract configuration
         self.base_config = "--oem 3 -l eng"
         self.psm_modes = [6, 4, 11]
+        self._fast_accept_conf = 0.78
+        self._fast_accept_signal = 10.0
+        self._fast_accept_text_len = 700
+
+    def _paddle_runtime_available(self) -> bool:
+        return (
+            importlib.util.find_spec("paddleocr") is not None
+            and importlib.util.find_spec("paddle") is not None
+        )
 
     def _resolve_tesseract_cmd(self) -> Optional[str]:
         env_cmd = os.getenv("TESSERACT_CMD") or getattr(settings, "TESSERACT_CMD", "")
@@ -177,6 +191,65 @@ class OCREngine:
         # Weight OCR confidence first, then structured invoice signals and text completeness.
         return (avg_conf * 100.0) + (signal_score * 4.0) + (min(text_len, 4500) / 110.0)
 
+    def _text_from_tesseract_data(self, data: Dict[str, Any]) -> str:
+        line_map: Dict[tuple, list] = {}
+        texts = data.get("text", [])
+        confs = data.get("conf", [])
+        pages = data.get("page_num", [])
+        blocks = data.get("block_num", [])
+        pars = data.get("par_num", [])
+        lines = data.get("line_num", [])
+
+        for idx in range(len(texts)):
+            token = str(texts[idx]).strip()
+            if not token:
+                continue
+
+            conf = -1.0
+            try:
+                conf = float(str(confs[idx]).strip())
+            except (TypeError, ValueError, IndexError):
+                conf = -1.0
+
+            if conf >= 0 and conf < 15:
+                continue
+
+            key = (
+                pages[idx] if idx < len(pages) else 0,
+                blocks[idx] if idx < len(blocks) else 0,
+                pars[idx] if idx < len(pars) else 0,
+                lines[idx] if idx < len(lines) else idx,
+            )
+            line_map.setdefault(key, []).append(token)
+
+        ordered_lines = [" ".join(words) for _, words in sorted(line_map.items(), key=lambda item: item[0])]
+        return "\n".join(line for line in ordered_lines if line.strip())
+
+    def _evaluate_tesseract_candidate(self, variant_name: str, variant_image: np.ndarray, psm: int) -> Dict[str, Any]:
+        config = self._build_config(psm)
+        data = pytesseract.image_to_data(variant_image, config=config, output_type=Output.DICT)
+        text = self._text_from_tesseract_data(data)
+        avg_conf = self._avg_confidence(data)
+        text_len = len(text.strip())
+        signal_score = self._ocr_signal_score(text)
+        candidate_score = self._compose_score(avg_conf, text_len, signal_score)
+        return {
+            "variant": variant_name,
+            "psm": psm,
+            "data": data,
+            "text": text,
+            "avg_conf": avg_conf,
+            "signal_score": signal_score,
+            "score": candidate_score,
+        }
+
+    def _is_fast_accept(self, candidate: Dict[str, Any]) -> bool:
+        return (
+            candidate.get("avg_conf", 0.0) >= self._fast_accept_conf
+            and candidate.get("signal_score", 0.0) >= self._fast_accept_signal
+            and len(str(candidate.get("text", "")).strip()) >= self._fast_accept_text_len
+        )
+
     async def extract_text(self, image: np.ndarray) -> Dict[str, Any]:
         """
         Extract text with confidence scores
@@ -223,30 +296,48 @@ class OCREngine:
         }
 
     async def _tesseract_ocr(self, image: np.ndarray) -> Dict[str, Any]:
-        """Tesseract OCR extraction with multi-variant and multi-PSM selection."""
+        """Tesseract OCR extraction with adaptive candidate evaluation."""
         variants = self._build_variants(image)
         best: Optional[Dict[str, Any]] = None
 
-        for variant_name, variant_image in variants.items():
-            for psm in self.psm_modes:
-                config = self._build_config(psm)
-                data = pytesseract.image_to_data(variant_image, config=config, output_type=Output.DICT)
-                text = pytesseract.image_to_string(variant_image, config=config)
-                avg_conf = self._avg_confidence(data)
-                text_len = len(text.strip())
-                signal_score = self._ocr_signal_score(text)
-                candidate_score = self._compose_score(avg_conf, text_len, signal_score)
+        def update_best(candidate: Dict[str, Any]):
+            nonlocal best
+            if best is None or candidate["score"] > best["score"]:
+                best = candidate
 
-                if best is None or candidate_score > best["score"]:
-                    best = {
-                        "variant": variant_name,
-                        "psm": psm,
-                        "data": data,
-                        "text": text,
-                        "avg_conf": avg_conf,
-                        "signal_score": signal_score,
-                        "score": candidate_score,
-                    }
+        # Fast pass: often enough for clean invoices.
+        primary = self._evaluate_tesseract_candidate("gray", variants["gray"], 6)
+        update_best(primary)
+        if self._is_fast_accept(primary):
+            best = primary
+        else:
+            # Adaptive fallback: run a smaller shortlist first.
+            shortlist = [
+                ("clahe", 6),
+                ("adaptive", 6),
+                ("gray", 4),
+                ("sharpened", 6),
+            ]
+            for variant_name, psm in shortlist:
+                candidate = self._evaluate_tesseract_candidate(variant_name, variants[variant_name], psm)
+                update_best(candidate)
+
+            # Hard documents only: broaden search.
+            hard_document = (
+                (best or primary)["avg_conf"] < 0.60
+                or (best or primary)["signal_score"] < 7.5
+                or len(str((best or primary)["text"]).strip()) < 400
+            )
+            if hard_document:
+                extended = [
+                    ("otsu", 6),
+                    ("clahe", 4),
+                    ("adaptive", 4),
+                    ("gray", 11),
+                ]
+                for variant_name, psm in extended:
+                    candidate = self._evaluate_tesseract_candidate(variant_name, variants[variant_name], psm)
+                    update_best(candidate)
 
         if best is None:
             raise RuntimeError("Tesseract OCR failed to produce any output")

@@ -1,6 +1,6 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from backend.core.security import verify_token
+from datetime import datetime
+from fastapi import Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Dict, Any, Optional
 from backend.database.repositories.user_repo import UserRepository
 from backend.database.repositories.invoice_repo import InvoiceRepository
@@ -21,60 +21,22 @@ class TokenData:
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Dict[str, Any]:
-    """Validate and extract user from JWT token, return full user dict"""
-    if credentials is None:
-        return {
-            "_id": "public",
-            "email": "public@local",
-            "role": "user",
-            "is_active": True
-        }
-
-    token = credentials.credentials
-
-    payload = verify_token(token)
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload"
-        )
-    
-    # Get full user from database
-    user_repo = get_user_repository()
-    user = await user_repo.get_by_id(user_id)
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
-    
-    if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
-        )
-    
-    return user
+    """Authentication is disabled: always return a guest user context."""
+    return {
+        "_id": "public",
+        "email": "public@local",
+        "full_name": "Public User",
+        "company": "Public",
+        "role": "admin",
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+    }
 
 
 async def get_admin_user(
     current_user: Dict[str, Any] = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Ensure user is admin"""
-    if current_user.get("role") != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
+    """Authentication is disabled: allow all users as admin context."""
     return current_user
 
 

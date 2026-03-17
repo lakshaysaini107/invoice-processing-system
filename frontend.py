@@ -2,6 +2,7 @@
 import io
 import json
 import mimetypes
+import socket
 import subprocess
 import sys
 import time
@@ -411,7 +412,7 @@ def apply_futuristic_theme():
             z-index: 2;
             max-width: 1250px;
             padding-top: 0.8rem;
-            padding-left: 6.2rem;
+            padding-left: 1.2rem;
             padding-bottom: 2.2rem;
         }
 
@@ -1911,7 +1912,7 @@ def apply_futuristic_theme():
 
         @media (max-width: 1024px) {
             .main .block-container {
-                padding-left: 5.4rem;
+                padding-left: 1rem;
             }
 
             .if-cap-grid {
@@ -2277,7 +2278,7 @@ def render_sidebar_brand():
             </svg>
           </div>
           <div>
-            <div class="space-brand-title">InvoiceFlow AI</div>
+            <div class="space-brand-title">invoiceflow</div>
             <div class="space-brand-sub">Invoice Workspace</div>
           </div>
         </div>
@@ -2289,45 +2290,6 @@ def render_sidebar_brand():
 def render_main_header():
     st.markdown(
         """
-        <div class="if-topbar">
-          <div class="if-brand-wrap">
-            <div class="if-brand">
-              <div class="if-gem" aria-hidden="true">
-                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="if_logo_small_doc" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#f8fbff"/>
-                      <stop offset="100%" stop-color="#dbeafe"/>
-                    </linearGradient>
-                    <linearGradient id="if_logo_small_stamp" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#0ea5e9"/>
-                      <stop offset="100%" stop-color="#7b2ff7"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M20 8h22l14 14v30c0 6.6-5.4 12-12 12H20c-6.6 0-12-5.4-12-12V20c0-6.6 5.4-12 12-12Z" fill="url(#if_logo_small_doc)"/>
-                  <path d="M42 8v14h14" fill="none" stroke="#b8c7ff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <rect x="24" y="30" width="20" height="4.4" rx="2.2" fill="#5b21b6"/>
-                  <rect x="24" y="38" width="15" height="4.4" rx="2.2" fill="#7c3aed"/>
-                  <circle cx="44" cy="44" r="6.6" fill="url(#if_logo_small_stamp)"/>
-                  <path d="M44 40.5v7M40.5 44h7" stroke="#f8fafc" stroke-width="2.1" stroke-linecap="round"/>
-                </svg>
-              </div>
-              <div>
-                <div class="if-brand-title">InvoiceFlow</div>
-                <div class="if-brand-sub">workspace / upload-extract</div>
-              </div>
-            </div>
-            <div class="if-brand-div"></div>
-            <div class="if-page-tag">Processing Dashboard</div>
-          </div>
-          <div class="if-top-actions">
-            <div class="if-status">ONLINE</div>
-            <div class="if-icon-btn">REF</div>
-            <div class="if-icon-btn">ALT</div>
-            <div class="if-icon-btn">FND</div>
-            <div class="if-avatar">AK</div>
-          </div>
-        </div>
         <div class="if-hero">
           <div class="if-hero-rings" aria-hidden="true">
             <div class="if-hero-ring"></div>
@@ -2361,7 +2323,7 @@ def render_main_header():
               </svg>
             </div>
           </div>
-          <div class="if-hero-title">InvoiceFlow</div>
+          <div class="if-hero-title">invoiceflow</div>
           <div class="if-hero-sub">
             The intelligent invoice processing workspace. Upload, extract, review, and export structured data with production-grade reliability.
           </div>
@@ -2384,7 +2346,7 @@ def render_capability_cards():
         <div class="if-cap-head">
           <div>
             <div class="if-cap-title"><b>Platform</b> Capabilities</div>
-            <div class="if-cap-sub">Everything InvoiceFlow does for you, visualized and production-ready.</div>
+            <div class="if-cap-sub">Everything the platform does for you, visualized and production-ready.</div>
           </div>
         </div>
         <div class="if-cap-grid">
@@ -2605,6 +2567,11 @@ def ensure_dict_payload(payload: Any) -> Dict[str, Any]:
     return payload if isinstance(payload, dict) else {"raw_response": payload}
 
 
+REVIEW_READY_STATUSES = {"completed", "reviewed"}
+REVIEW_TERMINAL_STATUSES = REVIEW_READY_STATUSES | {"failed"}
+REVIEW_POLL_STATUSES = {"pending", "processing", "uploaded", "queued", "initialization"}
+
+
 def start_processing_for_upload(invoice_id: str, use_cache: bool) -> Dict[str, Any]:
     proc_res = post_json(
         f"{st.session_state.base_url}/process/start",
@@ -2630,6 +2597,19 @@ def set_active_invoice(invoice_id: str):
 
 
 def load_review_details_for_invoice(invoice_id: str) -> Tuple[bool, Optional[str]]:
+    previous_details = st.session_state.get("review_details")
+    previous_status = (
+        str(previous_details.get("processing_status") or "").lower()
+        if isinstance(previous_details, dict)
+        else ""
+    )
+    previous_ready_for_review = (
+        isinstance(previous_details, dict)
+        and (bool(previous_details.get("ready_for_review")) or previous_status in REVIEW_READY_STATUSES)
+    )
+    previous_loaded_invoice_id = st.session_state.get("review_loaded_invoice_id")
+    previous_review_json = st.session_state.get("review_json")
+
     res = get_json(f"{st.session_state.base_url}/review/{invoice_id}/details")
     if isinstance(res, dict) and res.get("_error"):
         message = f"Backend not reachable: {res['_error']}"
@@ -2648,14 +2628,72 @@ def load_review_details_for_invoice(invoice_id: str) -> Tuple[bool, Optional[str
             st.session_state.review_loaded_invoice_id = invoice_id
             st.session_state.review_load_error = message
             return False, message
-        st.session_state.review_details = data
-        st.session_state.review_json = json.dumps(data.get("extracted_data", {}), indent=2)
+        processing_status = str(data.get("processing_status") or "pending").lower()
+        extracted_data = data.get("extracted_data")
+        confidence_scores = data.get("confidence_scores")
+        details_payload = {
+            **data,
+            "invoice_id": data.get("invoice_id") or invoice_id,
+            "filename": data.get("filename") or data.get("file_name") or "-",
+            "extracted_data": extracted_data if isinstance(extracted_data, dict) else {},
+            "confidence_scores": confidence_scores if isinstance(confidence_scores, dict) else {},
+            "processing_status": processing_status,
+            "ready_for_review": bool(data.get("ready_for_review")) or processing_status in REVIEW_READY_STATUSES,
+            "progress": int(data.get("progress") or 0),
+            "current_step": data.get("current_step"),
+            "error_message": data.get("error_message"),
+        }
+        st.session_state.review_details = details_payload
+        should_refresh_json = (
+            previous_loaded_invoice_id != invoice_id
+            or not previous_review_json
+            or (details_payload.get("ready_for_review") and not previous_ready_for_review)
+        )
+        if should_refresh_json and details_payload.get("ready_for_review"):
+            st.session_state.review_json = json.dumps(details_payload.get("extracted_data", {}), indent=2)
         st.session_state.review_loaded_invoice_id = invoice_id
         st.session_state.review_load_error = None
-        return True, None
+        if details_payload.get("ready_for_review"):
+            return True, None
+        message = f"Invoice is {processing_status}; waiting for extraction."
+        st.session_state.review_load_error = message
+        return False, message
 
     detail = data.get("detail") if isinstance(data, dict) else data
     message = str(detail)
+
+    # Fallback: use process status data when the review endpoint is not ready.
+    status_res = get_json(f"{st.session_state.base_url}/process/status/{invoice_id}")
+    if not (isinstance(status_res, dict) and status_res.get("_error")):
+        status_data = response_payload(status_res)
+        if getattr(status_res, "status_code", None) == 200 and isinstance(status_data, dict):
+            process_state = str(status_data.get("status") or "pending").lower()
+            fallback_details = {
+                "invoice_id": invoice_id,
+                "filename": "-",
+                "extracted_data": status_data.get("extracted_data") if isinstance(status_data.get("extracted_data"), dict) else {},
+                "confidence_scores": status_data.get("confidence_scores") if isinstance(status_data.get("confidence_scores"), dict) else {},
+                "processing_status": process_state,
+                "review_status": None,
+                "ready_for_review": process_state in REVIEW_READY_STATUSES,
+                "progress": int(status_data.get("progress") or 0),
+                "current_step": status_data.get("current_step"),
+                "error_message": status_data.get("error_message"),
+            }
+            st.session_state.review_details = fallback_details
+            should_refresh_json = (
+                previous_loaded_invoice_id != invoice_id
+                or not previous_review_json
+                or (fallback_details["ready_for_review"] and not previous_ready_for_review)
+            )
+            if should_refresh_json and fallback_details["ready_for_review"]:
+                st.session_state.review_json = json.dumps(fallback_details.get("extracted_data", {}), indent=2)
+            st.session_state.review_loaded_invoice_id = invoice_id
+            st.session_state.review_load_error = message
+            if fallback_details["ready_for_review"]:
+                return True, None
+            return False, f"{message} (status: {process_state})"
+
     st.session_state.review_details = None
     st.session_state.review_json = ""
     st.session_state.review_loaded_invoice_id = invoice_id
@@ -2782,7 +2820,7 @@ def render_upload_results(results: List[Dict[str, Any]], auto_process: bool):
     if auto_process:
         metric_columns[3].metric("Processing Queued", processing_started)
 
-    st.dataframe(rows, use_container_width=True)
+    st.dataframe(rows, width='stretch')
     with st.expander("View full upload responses"):
         st.json(results)
 
@@ -2877,8 +2915,10 @@ def render_recent_upload_panel():
 
 
 def init_state():
+    if "backend_port" not in st.session_state:
+        st.session_state.backend_port = 8000
     if "base_url" not in st.session_state:
-        st.session_state.base_url = "http://localhost:8000/api"
+        st.session_state.base_url = f"http://localhost:{st.session_state.backend_port}/api"
     if "history" not in st.session_state:
         st.session_state.history = []
     if "review_details" not in st.session_state:
@@ -2889,6 +2929,8 @@ def init_state():
         st.session_state.review_loaded_invoice_id = None
     if "review_load_error" not in st.session_state:
         st.session_state.review_load_error = None
+    if "review_auto_refresh" not in st.session_state:
+        st.session_state.review_auto_refresh = True
     if "last_uploads" not in st.session_state:
         st.session_state.last_uploads = []
     if "upload_activity" not in st.session_state:
@@ -2906,9 +2948,73 @@ def init_state():
     if "backend_autostart_attempted" not in st.session_state:
         st.session_state.backend_autostart_attempted = False
 
+    # Always re-evaluate backend target so stale sessions don't stay pinned to a bad port.
+    sync_backend_endpoint()
+
 
 def api_headers() -> dict:
     return {}
+
+
+def port_in_use(host: str, port: int, timeout: float = 0.4) -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(timeout)
+            return sock.connect_ex((host, port)) == 0
+    except OSError:
+        return False
+
+
+def backend_usable_without_auth(port: int) -> bool:
+    base = f"http://127.0.0.1:{port}"
+    try:
+        health = requests.get(f"{base}/health", timeout=1.0)
+        if health.status_code != 200:
+            return False
+        me = requests.get(f"{base}/api/auth/me", timeout=1.0)
+        return me.status_code == 200
+    except RequestException:
+        return False
+
+
+def select_backend_port() -> int:
+    managed_proc = st.session_state.get("backend_proc")
+    if managed_proc is not None and managed_proc.poll() is None:
+        managed_port = int(st.session_state.get("backend_port", 8000))
+        if backend_usable_without_auth(managed_port):
+            return managed_port
+
+    # If 8000 is free, use it.
+    if not port_in_use("127.0.0.1", 8000):
+        return 8000
+
+    # 8000 is occupied by an external process; prefer a dedicated free port
+    # so the UI can launch a backend with the latest local code.
+    for port in [8001, 8002, 8003, 8010, 8020]:
+        if not port_in_use("127.0.0.1", port):
+            return port
+
+    # Fallback if all preferred ports are busy.
+    return 8000
+
+
+def sync_backend_endpoint():
+    selected_port = select_backend_port()
+    selected_base = f"http://localhost:{selected_port}/api"
+    if (
+        st.session_state.get("backend_port") != selected_port
+        or st.session_state.get("base_url") != selected_base
+    ):
+        st.session_state.backend_port = selected_port
+        st.session_state.base_url = selected_base
+        st.session_state.backend_autostart_attempted = False
+
+
+def swap_url_base(url: str, old_base: str, new_base: str) -> str:
+    if old_base and url.startswith(old_base):
+        return f"{new_base}{url[len(old_base):]}"
+    return url
+
 
 def root_url(base_url: str) -> str:
     return base_url[:-4] if base_url.endswith("/api") else base_url
@@ -2934,12 +3040,12 @@ def start_backend_process() -> Tuple[bool, str]:
             "--host",
             "0.0.0.0",
             "--port",
-            "8000",
+            str(st.session_state.backend_port),
         ]
         proc = subprocess.Popen(cmd, cwd=".")
         st.session_state.backend_proc = proc
         st.session_state.backend_started_at = time.time()
-        return True, "Backend process started."
+        return True, f"Backend process started on port {st.session_state.backend_port}."
     except Exception as e:
         return False, f"Failed to start backend: {e}"
 
@@ -2970,14 +3076,34 @@ def post_json(url: str, payload: Optional[dict] = None, use_auth: bool = True, t
         headers["Content-Type"] = "application/json"
         return requests.post(url, json=payload, headers=headers, timeout=timeout)
     except RequestException as e:
-        return {"_error": f"Backend offline. Start it on port 8000. Details: {e}"}
+        original_base = st.session_state.base_url
+        sync_backend_endpoint()
+        fallback_base = st.session_state.base_url
+        if fallback_base != original_base:
+            retry_url = swap_url_base(url, original_base, fallback_base)
+            try:
+                if payload is None:
+                    return requests.post(retry_url, headers=headers, timeout=timeout)
+                return requests.post(retry_url, json=payload, headers=headers, timeout=timeout)
+            except RequestException as retry_error:
+                return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
+        return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
 
 
 def get_json(url: str, timeout: float = 15.0):
     try:
         return requests.get(url, headers=api_headers(), timeout=timeout)
     except RequestException as e:
-        return {"_error": f"Backend offline. Start it on port 8000. Details: {e}"}
+        original_base = st.session_state.base_url
+        sync_backend_endpoint()
+        fallback_base = st.session_state.base_url
+        if fallback_base != original_base:
+            retry_url = swap_url_base(url, original_base, fallback_base)
+            try:
+                return requests.get(retry_url, headers=api_headers(), timeout=timeout)
+            except RequestException as retry_error:
+                return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
+        return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
 
 
 def upload_single_file(base_url: str, filename: str, content: bytes, content_type: str):
@@ -2985,7 +3111,20 @@ def upload_single_file(base_url: str, filename: str, content: bytes, content_typ
     try:
         return requests.post(f"{base_url}/invoices/upload", headers=api_headers(), files=files, timeout=60)
     except RequestException as e:
-        return {"_error": str(e)}
+        original_base = base_url
+        sync_backend_endpoint()
+        fallback_base = st.session_state.base_url
+        if fallback_base != original_base:
+            try:
+                return requests.post(
+                    f"{fallback_base}/invoices/upload",
+                    headers=api_headers(),
+                    files=files,
+                    timeout=60,
+                )
+            except RequestException as retry_error:
+                return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
+        return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
 
 
 def build_files_from_zip(zip_bytes: bytes) -> List[Tuple[str, bytes, str]]:
@@ -3040,7 +3179,7 @@ def render_upload():
                 accept_multiple_files=True,
                 key="upload_batch_files",
             )
-            clicked = st.button("Upload Selected Files", use_container_width=True, type="primary", key="upload_batch_button")
+            clicked = st.button("Upload Selected Files", width='stretch', type="primary", key="upload_batch_button")
             if clicked:
                 if not files:
                     st.warning("Please select at least one file.")
@@ -3053,7 +3192,7 @@ def render_upload():
                 type=["zip"],
                 key="upload_zip_file",
             )
-            clicked = st.button("Upload Zip Contents", use_container_width=True, type="primary", key="upload_zip_button")
+            clicked = st.button("Upload Zip Contents", width='stretch', type="primary", key="upload_zip_button")
             if clicked:
                 if not zip_file:
                     st.warning("Please select a zip file.")
@@ -3094,7 +3233,7 @@ def render_processing():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("Start Processing", use_container_width=True, type="primary", key="start_processing_btn"):
+        if st.button("Start Processing", width='stretch', type="primary", key="start_processing_btn"):
             if not invoice_id:
                 st.warning("Please enter an invoice ID.")
                 return
@@ -3110,7 +3249,7 @@ def render_processing():
             else:
                 st.error(data)
     with col2:
-        if st.button("Check Status", use_container_width=True, key="check_processing_btn"):
+        if st.button("Check Status", width='stretch', key="check_processing_btn"):
             if not invoice_id:
                 st.warning("Please enter an invoice ID.")
                 return
@@ -3124,7 +3263,7 @@ def render_processing():
             else:
                 st.error(data)
     with col3:
-        if st.button("Clear Status", use_container_width=True, key="clear_processing_btn"):
+        if st.button("Clear Status", width='stretch', key="clear_processing_btn"):
             st.session_state.process_status = None
 
     status = st.session_state.process_status
@@ -3179,17 +3318,24 @@ def render_review():
         set_active_invoice(selected_invoice)
 
     invoice_id = st.session_state.active_invoice_id
+    cached_details = st.session_state.get("review_details")
+    cached_status = (
+        str(cached_details.get("processing_status") or "").lower()
+        if isinstance(cached_details, dict)
+        else ""
+    )
     if (
         st.session_state.get("review_loaded_invoice_id") != invoice_id
-        or st.session_state.get("review_details") is None
+        or cached_details is None
+        or cached_status not in REVIEW_TERMINAL_STATUSES
     ):
         load_review_details_for_invoice(invoice_id)
 
     with action_col1:
-        if st.button("Refresh Details", use_container_width=True, type="primary", key="refresh_review_btn"):
+        if st.button("Refresh Details", width='stretch', type="primary", key="refresh_review_btn"):
             load_review_details_for_invoice(invoice_id)
     with action_col2:
-        if st.button("Clear Review", use_container_width=True, key="clear_review_btn"):
+        if st.button("Clear Review", width='stretch', key="clear_review_btn"):
             st.session_state.review_details = None
             st.session_state.review_json = ""
             st.session_state.review_loaded_invoice_id = None
@@ -3199,9 +3345,17 @@ def render_review():
     if not details:
         st.info(f"Review data for invoice {invoice_id} is not ready yet.")
         last_error = st.session_state.get("review_load_error")
+        can_auto_refresh = True
         if last_error:
             st.caption(f"Latest status: {last_error}")
-        st.caption("Processing starts automatically in Upload. Click Refresh Details after a few seconds.")
+            lowered_error = str(last_error).lower()
+            if "not found" in lowered_error:
+                can_auto_refresh = False
+        st.checkbox("Auto refresh until ready", key="review_auto_refresh")
+        if st.session_state.review_auto_refresh and can_auto_refresh:
+            st.caption("Refreshing in 3 seconds...")
+            time.sleep(3.0)
+            st.rerun()
         return
 
     if not isinstance(details, dict):
@@ -3213,12 +3367,33 @@ def render_review():
         load_review_details_for_invoice(invoice_id)
         return
 
-    extracted_data = details.get("extracted_data", {})
-    confidence_scores = details.get("confidence_scores", {})
+    processing_status = str(details.get("processing_status") or "pending").lower()
+    ready_for_review = bool(details.get("ready_for_review")) or processing_status in REVIEW_READY_STATUSES
+    extracted_data = details.get("extracted_data") if isinstance(details.get("extracted_data"), dict) else {}
+    confidence_scores = details.get("confidence_scores") if isinstance(details.get("confidence_scores"), dict) else {}
+
     meta_col1, meta_col2, meta_col3 = st.columns(3)
     meta_col1.metric("Filename", details.get("filename") or "-")
-    meta_col2.metric("Processing Status", details.get("processing_status") or "-")
+    meta_col2.metric("Processing Status", processing_status.upper())
     meta_col3.metric("Extracted Fields", len(extracted_data))
+
+    if not ready_for_review:
+        progress_value = int(details.get("progress") or 0)
+        step_value = str(details.get("current_step") or "-")
+        status_col1, status_col2, status_col3 = st.columns(3)
+        status_col1.metric("Progress", f"{progress_value}%")
+        status_col2.metric("Status", processing_status.upper())
+        status_col3.metric("Current Step", step_value)
+        if processing_status == "failed":
+            st.error(details.get("error_message") or "Processing failed. Retry from the Processing tab.")
+        else:
+            st.info("Extraction is still running. Review fields will unlock automatically once completed.")
+        st.checkbox("Auto refresh until ready", key="review_auto_refresh")
+        if st.session_state.review_auto_refresh and processing_status in REVIEW_POLL_STATUSES:
+            st.caption("Refreshing in 3 seconds...")
+            time.sleep(3.0)
+            st.rerun()
+        return
 
     if confidence_scores:
         confidence_rows = []
@@ -3232,7 +3407,7 @@ def render_review():
             else:
                 confidence_text = str(confidence)
             confidence_rows.append({"Field": field, "Confidence": confidence_text})
-        st.dataframe(confidence_rows, use_container_width=True)
+        st.dataframe(confidence_rows, width='stretch')
 
     edited_json = st.text_area(
         "Extracted Data (JSON)",
@@ -3243,7 +3418,7 @@ def render_review():
     notes = st.text_area("Review Notes", key="review_notes", placeholder="Optional reviewer notes")
     approved = st.checkbox("Approve invoice", value=True, key="review_approved")
 
-    if st.button("Submit Review", use_container_width=True, type="primary", key="submit_review_btn"):
+    if st.button("Submit Review", width='stretch', type="primary", key="submit_review_btn"):
         try:
             edited_data = json.loads(edited_json) if edited_json.strip() else {}
         except Exception as e:
@@ -3302,7 +3477,7 @@ def render_export():
             format_func=lambda value: value.upper(),
         )
 
-    if st.button("Generate Export", use_container_width=True, type="primary", key="export_btn"):
+    if st.button("Generate Export", width='stretch', type="primary", key="export_btn"):
         if not invoice_id:
             st.warning("Please enter an invoice ID.")
             return
@@ -3358,7 +3533,7 @@ def render_history():
         "History & Uploaded Files",
         "Refresh and filter invoice records to quickly find earlier uploads.",
     )
-    if st.button("Refresh History", use_container_width=True, type="primary", key="refresh_history_btn"):
+    if st.button("Refresh History", width='stretch', type="primary", key="refresh_history_btn"):
         res = get_json(f"{st.session_state.base_url}/invoices/list")
         if isinstance(res, dict) and res.get("_error"):
             st.error(f"Backend not reachable: {res['_error']}")
@@ -3409,15 +3584,14 @@ def render_history():
         filtered_rows.append(row)
 
     st.caption(f"Showing {len(filtered_rows)} of {len(normalized_rows)} records.")
-    st.dataframe(filtered_rows, use_container_width=True)
+    st.dataframe(filtered_rows, width='stretch')
 
 
 def main():
-    st.set_page_config(page_title="Invoice Processing", layout="wide", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="invoiceflow", layout="wide", initial_sidebar_state="collapsed")
     init_state()
     apply_futuristic_theme()
     render_live_background()
-    render_side_rail()
     render_main_header()
     render_capability_cards()
 
@@ -3434,8 +3608,8 @@ def main():
 
     if not st.session_state.get("backend_ok", False):
         inject_motion_runtime()
-        st.error("Backend is offline. Start it on port 8000 and try again.")
-        st.caption("Run: uvicorn backend.app.main:app --reload --port 8000")
+        st.error(f"Backend is offline. Start it at {st.session_state.base_url} and try again.")
+        st.caption(f"Run: uvicorn backend.app.main:app --reload --port {st.session_state.backend_port}")
         st.caption(f"Details: {st.session_state.get('backend_status')}")
         return
 
