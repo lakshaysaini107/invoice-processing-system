@@ -179,3 +179,38 @@ class MySQLClient:
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                     """
                 )
+                await cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS erp_invoices (
+                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        source_invoice_id VARCHAR(64) NULL,
+                        invoice_number VARCHAR(255) NULL,
+                        invoice_date DATE NULL,
+                        due_date DATE NULL,
+                        vendor_name VARCHAR(255) NULL,
+                        vendor_gst VARCHAR(20) NULL,
+                        vendor_address TEXT NULL,
+                        buyer_name VARCHAR(255) NULL,
+                        buyer_gst VARCHAR(20) NULL,
+                        buyer_address TEXT NULL,
+                        invoice_amount DECIMAL(15, 2) NULL,
+                        tax_amount DECIMAL(15, 2) NULL,
+                        total_amount DECIMAL(15, 2) NULL,
+                        tax_rate DECIMAL(7, 2) NULL,
+                        currency VARCHAR(16) NULL,
+                        payment_terms VARCHAR(255) NULL,
+                        purchase_order_number VARCHAR(255) NULL,
+                        account_number VARCHAR(64) NULL,
+                        account_holder VARCHAR(255) NULL,
+                        bank_name VARCHAR(255) NULL,
+                        ifsc VARCHAR(16) NULL,
+                        branch VARCHAR(255) NULL,
+                        notes TEXT NULL,
+                        created_at DATETIME NOT NULL,
+                        updated_at DATETIME NOT NULL,
+                        INDEX idx_erp_source_invoice (source_invoice_id),
+                        INDEX idx_erp_invoice_number (invoice_number),
+                        INDEX idx_erp_vendor_name (vendor_name)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """
+                )

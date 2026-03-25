@@ -4,6 +4,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Dict, Any, Optional
 from backend.database.repositories.user_repo import UserRepository
 from backend.database.repositories.invoice_repo import InvoiceRepository
+from backend.database.repositories.erp_invoice_repo import ERPInvoiceRepository
 
 
 # Initialize security scheme
@@ -89,5 +90,17 @@ def get_export_service():
     return ExportService()
 
 
+def get_erp_invoice_repository():
+    """Dependency for ERP persistence repository."""
+    return ERPInvoiceRepository()
+
+
+def get_erp_current_invoice_store() -> Dict[str, Any]:
+    """Shared in-memory handoff store for ERP demos."""
+    global _erp_current_invoice_store
+    return _erp_current_invoice_store
+
+
 # Cache heavy services (OCR/LLM/Spacy) to avoid reloading per-request.
 _processing_service = None
+_erp_current_invoice_store: Dict[str, Any] = {}

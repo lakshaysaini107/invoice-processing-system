@@ -10,7 +10,7 @@ import time
 from backend.database.mysql import MySQLClient
 
 # API Router imports
-from backend.api import auth, upload, process, review, export
+from backend.api import auth, upload, process, review, export, erp
 
 # Database connection startup
 async def startup_event():
@@ -103,6 +103,7 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(process.router, prefix="/api")
 app.include_router(review.router, prefix="/api")
 app.include_router(export.router, prefix="/api")
+app.include_router(erp.router)
 
 
 if __name__ == "__main__":

@@ -2947,6 +2947,10 @@ def init_state():
         st.session_state.backend_started_at = None
     if "backend_autostart_attempted" not in st.session_state:
         st.session_state.backend_autostart_attempted = False
+    if "erp_url" not in st.session_state:
+        st.session_state.erp_url = "http://localhost:8502"
+    if "erp_launch_nonce" not in st.session_state:
+        st.session_state.erp_launch_nonce = 0
 
     # Always re-evaluate backend target so stale sessions don't stay pinned to a bad port.
     sync_backend_endpoint()
@@ -3475,6 +3479,41 @@ def render_export():
             ["json", "csv", "excel"],
             key="export_format",
             format_func=lambda value: value.upper(),
+        )
+
+    erp_col1, erp_col2 = st.columns([1, 2])
+    with erp_col1:
+        fill_erp_clicked = st.button("Fill in ERP", width='stretch', key="fill_erp_btn")
+    with erp_col2:
+        st.caption(
+            f"Run the ERP module separately with: `streamlit run erp_frontend.py --server.port 8502`"
+        )
+        st.link_button("Open ERP Module", st.session_state.erp_url, use_container_width=True)
+
+    if fill_erp_clicked:
+        if not invoice_id:
+            st.warning("Please enter an invoice ID before filling ERP.")
+            return
+        set_res = post_json(
+            f"{st.session_state.base_url}/erp/set_current_invoice",
+            {"invoice_id": invoice_id},
+        )
+        if isinstance(set_res, dict) and set_res.get("_error"):
+            st.error(f"Backend not reachable: {set_res['_error']}")
+            return
+        set_data = response_payload(set_res)
+        if getattr(set_res, "status_code", None) != 200:
+            st.error(set_data)
+            return
+        st.success(f"Invoice {invoice_id} sent to ERP.")
+        st.session_state.erp_launch_nonce += 1
+        components.html(
+            f"""
+            <script>
+            window.open("{st.session_state.erp_url}", "_blank");
+            </script>
+            """,
+            height=0,
         )
 
     if st.button("Generate Export", width='stretch', type="primary", key="export_btn"):
