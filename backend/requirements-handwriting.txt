@@ -1,0 +1,5 @@
+# Optional dependencies for handwritten invoice support via TrOCR.
+# Keep these separate so the default install path for printed invoices stays unchanged.
+transformers>=4.39.0
+torch>=2.2.0
+sentencepiece>=0.1.99

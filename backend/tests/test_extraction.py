@@ -153,6 +153,27 @@ async def test_extraction_pipeline_flow(processing_service, mock_image):
     processing_service.vision_llm.extract_fields.assert_called_once()
     processing_service.invoice_repo.update.assert_called()  # Status updates
 
+
+@pytest.mark.asyncio
+async def test_extraction_pipeline_forwards_handwriting_preference(processing_service, mock_image):
+    processing_service.preprocessing.process_image.return_value = mock_image
+    processing_service.ocr.extract_text.return_value = {"text": "OCR Data"}
+    processing_service.layout_detection.detect_layout.return_value = {"tables": []}
+    processing_service.vision_llm.extract_fields.return_value = SAMPLE_EXTRACTION_RESPONSE
+    processing_service.ner.extract_entities.return_value = {"vendors": []}
+    processing_service.validation.validate_extraction.return_value = (SAMPLE_EXTRACTION_RESPONSE, {"overall": 0.9})
+
+    await processing_service.process_invoice(
+        invoice_id="test-id",
+        file_path="dummy/path.jpg",
+        prefer_handwriting_ocr=True,
+    )
+
+    processing_service.ocr.extract_text.assert_called_once_with(
+        mock_image,
+        prefer_handwriting_ocr=True,
+    )
+
 @pytest.mark.asyncio
 async def test_extraction_failure_handling(processing_service):
     """Test that exceptions in the pipeline are caught and logged"""

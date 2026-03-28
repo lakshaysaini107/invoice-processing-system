@@ -8,6 +8,7 @@ import sys
 import time
 import zipfile
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlencode
 
 import requests
 from requests.exceptions import RequestException
@@ -2572,10 +2573,18 @@ REVIEW_TERMINAL_STATUSES = REVIEW_READY_STATUSES | {"failed"}
 REVIEW_POLL_STATUSES = {"pending", "processing", "uploaded", "queued", "initialization"}
 
 
-def start_processing_for_upload(invoice_id: str, use_cache: bool) -> Dict[str, Any]:
+def start_processing_for_upload(
+    invoice_id: str,
+    use_cache: bool,
+    prefer_handwriting_ocr: bool,
+) -> Dict[str, Any]:
     proc_res = post_json(
         f"{st.session_state.base_url}/process/start",
-        {"invoice_id": invoice_id, "use_cache": use_cache},
+        {
+            "invoice_id": invoice_id,
+            "use_cache": use_cache,
+            "prefer_handwriting_ocr": prefer_handwriting_ocr,
+        },
     )
     if isinstance(proc_res, dict) and proc_res.get("_error"):
         return {"error": proc_res["_error"]}
@@ -2705,6 +2714,7 @@ def upload_invoice_entries(
     entries: List[Tuple[str, bytes, str]],
     auto_process: bool,
     use_cache: bool,
+    prefer_handwriting_ocr: bool,
 ) -> List[Dict[str, Any]]:
     results: List[Dict[str, Any]] = []
     total = len(entries)
@@ -2734,7 +2744,11 @@ def upload_invoice_entries(
                 set_active_invoice(invoice_id)
             processing: Optional[Dict[str, Any]] = None
             if auto_process and status_code == 200 and invoice_id:
-                processing = start_processing_for_upload(invoice_id, use_cache)
+                processing = start_processing_for_upload(
+                    invoice_id,
+                    use_cache,
+                    prefer_handwriting_ocr,
+                )
 
             results.append(
                 {
@@ -2948,9 +2962,13 @@ def init_state():
     if "backend_autostart_attempted" not in st.session_state:
         st.session_state.backend_autostart_attempted = False
     if "erp_url" not in st.session_state:
-        st.session_state.erp_url = "http://localhost:8502"
+        st.session_state.erp_url = "http://localhost:8503"
     if "erp_launch_nonce" not in st.session_state:
         st.session_state.erp_launch_nonce = 0
+    if "upload_prefer_handwriting_ocr" not in st.session_state:
+        st.session_state.upload_prefer_handwriting_ocr = False
+    if "process_prefer_handwriting_ocr" not in st.session_state:
+        st.session_state.process_prefer_handwriting_ocr = False
 
     # Always re-evaluate backend target so stale sessions don't stay pinned to a bad port.
     sync_backend_endpoint()
@@ -3022,6 +3040,14 @@ def swap_url_base(url: str, old_base: str, new_base: str) -> str:
 
 def root_url(base_url: str) -> str:
     return base_url[:-4] if base_url.endswith("/api") else base_url
+
+
+def build_erp_launch_url(invoice_id: Optional[str] = None) -> str:
+    params = {"backend_api": st.session_state.base_url}
+    if invoice_id:
+        params["invoice_id"] = invoice_id
+    return f"{st.session_state.erp_url.rstrip('/')}?{urlencode(params)}"
+
 
 def check_backend(base_url: str, timeout: float = 10.0) -> Tuple[bool, str]:
     try:
@@ -3175,6 +3201,12 @@ def render_upload():
             st.caption("Production mode: auto-process ON")
 
         use_cache = st.checkbox("Use cache for processing", value=True, key="upload_use_cache")
+        prefer_handwriting_ocr = st.checkbox(
+            "Prefer handwritten OCR for this batch",
+            value=False,
+            key="upload_prefer_handwriting_ocr",
+            help="Use this only for basic handwritten invoices. Printed invoices should usually leave this off.",
+        )
 
         if mode == "Batch files":
             files = st.file_uploader(
@@ -3189,7 +3221,12 @@ def render_upload():
                     st.warning("Please select at least one file.")
                 else:
                     entries = [(f.name, f.getvalue(), f.type or "application/octet-stream") for f in files]
-                    results = upload_invoice_entries(entries, auto_process=auto_process, use_cache=use_cache)
+                    results = upload_invoice_entries(
+                        entries,
+                        auto_process=auto_process,
+                        use_cache=use_cache,
+                        prefer_handwriting_ocr=prefer_handwriting_ocr,
+                    )
         else:
             zip_file = st.file_uploader(
                 "Upload a zip file containing invoices",
@@ -3209,7 +3246,12 @@ def render_upload():
                     if not extracted:
                         st.warning("No files found in zip.")
                     else:
-                        results = upload_invoice_entries(extracted, auto_process=auto_process, use_cache=use_cache)
+                        results = upload_invoice_entries(
+                            extracted,
+                            auto_process=auto_process,
+                            use_cache=use_cache,
+                            prefer_handwriting_ocr=prefer_handwriting_ocr,
+                        )
 
     with right_col:
         render_recent_upload_panel()
@@ -3234,6 +3276,12 @@ def render_processing():
 
     invoice_id = st.text_input("Invoice ID", key="process_id", placeholder="Enter invoice ID")
     use_cache = st.checkbox("Use cache when available", value=True, key="process_cache")
+    prefer_handwriting_ocr = st.checkbox(
+        "Prefer handwritten OCR",
+        value=False,
+        key="process_prefer_handwriting_ocr",
+        help="Turn this on only for simple handwritten invoices. Default processing remains best for printed invoices.",
+    )
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -3241,7 +3289,11 @@ def render_processing():
             if not invoice_id:
                 st.warning("Please enter an invoice ID.")
                 return
-            payload = {"invoice_id": invoice_id, "use_cache": use_cache}
+            payload = {
+                "invoice_id": invoice_id,
+                "use_cache": use_cache,
+                "prefer_handwriting_ocr": prefer_handwriting_ocr,
+            }
             res = post_json(f"{st.session_state.base_url}/process/start", payload)
             if isinstance(res, dict) and res.get("_error"):
                 st.error(f"Backend not reachable: {res['_error']}")
@@ -3480,15 +3532,16 @@ def render_export():
             key="export_format",
             format_func=lambda value: value.upper(),
         )
+    erp_launch_url = build_erp_launch_url(invoice_id or st.session_state.get("active_invoice_id"))
 
     erp_col1, erp_col2 = st.columns([1, 2])
     with erp_col1:
         fill_erp_clicked = st.button("Fill in ERP", width='stretch', key="fill_erp_btn")
     with erp_col2:
         st.caption(
-            f"Run the ERP module separately with: `streamlit run erp_frontend.py --server.port 8502`"
+            f"Run the ERP module separately with: `streamlit run erp_frontend.py --server.port 8503`"
         )
-        st.link_button("Open ERP Module", st.session_state.erp_url, use_container_width=True)
+        st.link_button("Open ERP Module", erp_launch_url, use_container_width=True)
 
     if fill_erp_clicked:
         if not invoice_id:
@@ -3507,10 +3560,11 @@ def render_export():
             return
         st.success(f"Invoice {invoice_id} sent to ERP.")
         st.session_state.erp_launch_nonce += 1
+        launch_url = json.dumps(build_erp_launch_url(invoice_id))
         components.html(
             f"""
             <script>
-            window.open("{st.session_state.erp_url}", "_blank");
+            window.open({launch_url}, "_blank");
             </script>
             """,
             height=0,

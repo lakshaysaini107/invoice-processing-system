@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     # OCR
     TESSERACT_CMD: str = ""
     TESSDATA_PREFIX: str = ""
+    ENABLE_TROCR_HANDWRITING: bool = False
+    TROCR_MODEL_NAME: str = "microsoft/trocr-small-handwritten"
+    TROCR_DEVICE: str = "cpu"
+    TROCR_TRIGGER_CONFIDENCE: float = 0.55
+    TROCR_TRIGGER_SIGNAL: float = 8.0
+    TROCR_MIN_TEXT_LENGTH: int = 350
+    TROCR_SELECTION_MARGIN: float = 5.0
+    TROCR_MAX_REGIONS: int = 24
+    TROCR_MIN_LINE_HEIGHT: int = 18
 
     @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", "ALLOWED_FORMATS", mode="before")
     @classmethod

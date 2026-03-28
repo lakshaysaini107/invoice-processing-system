@@ -38,7 +38,8 @@ class ProcessingService:
         self,
         invoice_id: str,
         file_path: str,
-        use_cache: bool = True
+        use_cache: bool = True,
+        prefer_handwriting_ocr: bool = False,
     ) -> dict:
         """
         Complete pipeline:
@@ -61,7 +62,10 @@ class ProcessingService:
             # Step 2: OCR
             await self._update_progress(invoice_id, 25, "ocr", "Extracting text")
             ocr_result = await self._run_stage_in_worker(
-                self.ocr.extract_text(processed_image)
+                self.ocr.extract_text(
+                    processed_image,
+                    prefer_handwriting_ocr=prefer_handwriting_ocr,
+                )
             )
             raw_text = ocr_result["text"]
             logger.info(f"OCR completed - Extracted {len(raw_text)} characters")

@@ -49,6 +49,13 @@ class OCREngine:
         self._fast_accept_conf = 0.78
         self._fast_accept_signal = 10.0
         self._fast_accept_text_len = 700
+        self.handwriting_ocr = None
+        try:
+            from backend.ai.handwriting_ocr import HandwritingOCREngine
+
+            self.handwriting_ocr = HandwritingOCREngine()
+        except Exception as e:
+            logger.warning("Optional handwriting OCR engine could not be initialized: %s", str(e))
 
     def _paddle_runtime_available(self) -> bool:
         return (
@@ -250,15 +257,115 @@ class OCREngine:
             and len(str(candidate.get("text", "")).strip()) >= self._fast_accept_text_len
         )
 
-    async def extract_text(self, image: np.ndarray) -> Dict[str, Any]:
+    def _ocr_result_confidence(self, result: Dict[str, Any]) -> float:
+        try:
+            return float(result.get("average_confidence", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _ocr_result_score(self, result: Dict[str, Any]) -> float:
+        text = str(result.get("text", "") or "")
+        signal_score = self._ocr_signal_score(text)
+        avg_conf = self._ocr_result_confidence(result)
+        return self._compose_score(avg_conf, len(text.strip()), signal_score)
+
+    def _handwriting_feature_enabled(self, prefer_handwriting_ocr: bool = False) -> bool:
+        if self.handwriting_ocr is None:
+            return False
+        return prefer_handwriting_ocr or bool(getattr(self.handwriting_ocr, "enabled", False))
+
+    def _should_try_handwriting_result(self, result: Dict[str, Any]) -> bool:
+        text = str(result.get("text", "") or "")
+        avg_conf = self._ocr_result_confidence(result)
+        signal_score = self._ocr_signal_score(text)
+        trigger_confidence = float(getattr(settings, "TROCR_TRIGGER_CONFIDENCE", 0.55))
+
+        if avg_conf >= 0.80:
+            return False
+
+        if avg_conf < trigger_confidence:
+            return True
+
+        return (
+            signal_score < float(getattr(settings, "TROCR_TRIGGER_SIGNAL", 8.0))
+            and len(text.strip()) < int(getattr(settings, "TROCR_MIN_TEXT_LENGTH", 350))
+        )
+
+    def _should_promote_handwriting_result(
+        self,
+        base_result: Dict[str, Any],
+        handwriting_result: Dict[str, Any],
+    ) -> bool:
+        handwriting_text = str(handwriting_result.get("text", "") or "").strip()
+        if not handwriting_text:
+            return False
+
+        base_score = self._ocr_result_score(base_result)
+        handwriting_score = self._ocr_result_score(handwriting_result)
+        base_conf = self._ocr_result_confidence(base_result)
+        handwriting_conf = self._ocr_result_confidence(handwriting_result)
+        selection_margin = float(getattr(settings, "TROCR_SELECTION_MARGIN", 5.0))
+        trigger_confidence = float(getattr(settings, "TROCR_TRIGGER_CONFIDENCE", 0.55))
+        return (
+            handwriting_score >= base_score + selection_margin
+            and (
+                handwriting_conf >= base_conf + 0.05
+                or (base_conf < trigger_confidence and handwriting_conf >= 0.65)
+            )
+        )
+
+    async def _run_handwriting_fallback(
+        self,
+        image: np.ndarray,
+        prefer_handwriting_ocr: bool = False,
+    ) -> Optional[Dict[str, Any]]:
+        if self.handwriting_ocr is None:
+            return None
+
+        is_available = getattr(self.handwriting_ocr, "is_available", None)
+        if callable(is_available) and not is_available(force=prefer_handwriting_ocr):
+            return None
+
+        try:
+            return await self.handwriting_ocr.extract_text(image)
+        except Exception as e:
+            logger.warning("Handwriting OCR fallback failed: %s", str(e))
+            return None
+
+    async def extract_text(
+        self,
+        image: np.ndarray,
+        prefer_handwriting_ocr: bool = False,
+    ) -> Dict[str, Any]:
         """
         Extract text with confidence scores
         Returns structured OCR result
         """
         try:
             if self.use_paddle:
-                return await self._paddle_ocr(image)
-            return await self._tesseract_ocr(image)
+                result = await self._paddle_ocr(image)
+            else:
+                result = await self._tesseract_ocr(image)
+
+            should_try_handwriting = prefer_handwriting_ocr or self._should_try_handwriting_result(result)
+            if self._handwriting_feature_enabled(prefer_handwriting_ocr) and should_try_handwriting:
+                handwriting_result = await self._run_handwriting_fallback(
+                    image,
+                    prefer_handwriting_ocr=prefer_handwriting_ocr,
+                )
+                if handwriting_result and self._should_promote_handwriting_result(result, handwriting_result):
+                    handwriting_result["fallback_from"] = result.get("engine")
+                    handwriting_result["base_average_confidence"] = result.get("average_confidence", 0.0)
+                    handwriting_result["handwriting_requested"] = prefer_handwriting_ocr
+                    logger.info(
+                        "Promoted handwriting OCR result over %s base OCR (base=%.2f, handwriting=%.2f)",
+                        result.get("engine"),
+                        self._ocr_result_score(result),
+                        self._ocr_result_score(handwriting_result),
+                    )
+                    return handwriting_result
+
+            return result
 
         except Exception as e:
             logger.error(f"OCR error: {str(e)}")
