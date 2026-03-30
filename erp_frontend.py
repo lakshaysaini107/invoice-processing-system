@@ -9,15 +9,169 @@ import streamlit as st
 from requests import RequestException
 
 
-DEFAULT_BACKEND_API = os.getenv("ERP_BACKEND_API", "http://localhost:8001/api")
+DEFAULT_BACKEND_API = os.getenv("ERP_BACKEND_API", "http://localhost:8000/api")
 
 
 st.set_page_config(page_title="ERP Invoice Form", layout="wide")
 
 
+def apply_erp_theme() -> None:
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap');
+
+        :root {
+            --erp-bg: #f4efe6;
+            --erp-ink: #172126;
+            --erp-muted: #5f6b73;
+            --erp-card: rgba(255, 255, 255, 0.82);
+            --erp-border: rgba(23, 33, 38, 0.10);
+            --erp-deep: #0f3d56;
+            --erp-amber: #e8a547;
+            --erp-mint: #1f8a70;
+            --erp-danger: #c75b39;
+        }
+
+        .stApp {
+            background:
+                radial-gradient(circle at top left, rgba(232, 165, 71, 0.16), transparent 26%),
+                radial-gradient(circle at top right, rgba(15, 61, 86, 0.16), transparent 24%),
+                linear-gradient(180deg, #f6f0e7 0%, #f1f6f5 100%);
+        }
+
+        html, body, [class*="css"]  {
+            font-family: "Manrope", sans-serif;
+            color: var(--erp-ink);
+        }
+
+        h1, h2, h3 {
+            font-family: "Space Grotesk", sans-serif !important;
+            color: var(--erp-ink);
+            letter-spacing: -0.02em;
+        }
+
+        [data-testid="stSidebar"] {
+            background: rgba(255, 255, 255, 0.72);
+            border-right: 1px solid var(--erp-border);
+        }
+
+        [data-testid="stHeader"] {
+            background: rgba(244, 239, 230, 0.72);
+        }
+
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stTextArea"] textarea {
+            border-radius: 14px;
+            border: 1px solid rgba(23, 33, 38, 0.14);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        div[data-testid="stTextInput"] input:focus,
+        div[data-testid="stTextArea"] textarea:focus {
+            border-color: rgba(15, 61, 86, 0.42);
+            box-shadow: 0 0 0 0.2rem rgba(15, 61, 86, 0.08);
+        }
+
+        div.stButton > button, div.stLinkButton > a {
+            border-radius: 14px !important;
+            font-weight: 700 !important;
+            border: 0 !important;
+        }
+
+        div.stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, var(--erp-deep), #155e75) !important;
+            color: white !important;
+            box-shadow: 0 12px 24px rgba(15, 61, 86, 0.18);
+        }
+
+        div.stButton > button:not([kind="primary"]) {
+            background: rgba(15, 61, 86, 0.08) !important;
+            color: var(--erp-deep) !important;
+        }
+
+        .erp-hero {
+            border: 1px solid var(--erp-border);
+            border-radius: 24px;
+            padding: 1.5rem 1.6rem;
+            background: linear-gradient(130deg, rgba(255,255,255,0.86), rgba(247,250,249,0.78));
+            box-shadow: 0 24px 44px rgba(15, 61, 86, 0.08);
+            margin-bottom: 1rem;
+        }
+
+        .erp-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            background: rgba(15, 61, 86, 0.08);
+            color: var(--erp-deep);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .erp-hero h1 {
+            margin: 0.9rem 0 0.35rem 0;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+        }
+
+        .erp-hero p {
+            margin: 0;
+            color: var(--erp-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 60ch;
+        }
+
+        .erp-kpi {
+            border: 1px solid var(--erp-border);
+            border-radius: 18px;
+            padding: 0.95rem 1rem;
+            background: var(--erp-card);
+            box-shadow: 0 16px 28px rgba(15, 61, 86, 0.06);
+        }
+
+        .erp-kpi-label {
+            color: var(--erp-muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.35rem;
+        }
+
+        .erp-kpi-value {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.25rem;
+            color: var(--erp-ink);
+        }
+
+        .erp-section-title {
+            margin: 0 0 0.2rem 0;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.05rem;
+        }
+
+        .erp-section-copy {
+            margin: 0 0 0.85rem 0;
+            color: var(--erp-muted);
+            font-size: 0.9rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def init_state() -> None:
     if "erp_backend_api" not in st.session_state:
         st.session_state.erp_backend_api = DEFAULT_BACKEND_API
+    if "erp_target_invoice_id" not in st.session_state:
+        st.session_state.erp_target_invoice_id = None
+    if "erp_query_signature" not in st.session_state:
+        st.session_state.erp_query_signature = None
     if "erp_loaded_source_invoice_id" not in st.session_state:
         st.session_state.erp_loaded_source_invoice_id = None
     if "erp_last_save_message" not in st.session_state:
@@ -31,6 +185,13 @@ def decode_response_json(response: requests.Response) -> Any:
         text = response.text.strip()
         return {"detail": text or "Empty response"}
 
+def response_error(payload: Any) -> str:
+    if isinstance(payload, dict):
+        detail = payload.get("detail") or payload.get("error") or payload.get("message")
+        if detail is not None:
+            return str(detail)
+    return str(payload)
+
 
 def get_json(url: str, timeout: float = 10.0) -> Tuple[Optional[Any], Optional[str]]:
     try:
@@ -40,10 +201,14 @@ def get_json(url: str, timeout: float = 10.0) -> Tuple[Optional[Any], Optional[s
     payload = decode_response_json(response)
     if response.ok:
         return payload, None
-    return None, str(payload)
+    return None, response_error(payload)
 
 
-def post_json(url: str, payload: Dict[str, Any], timeout: float = 15.0) -> Tuple[Optional[Any], Optional[str]]:
+def post_json(
+    url: str,
+    payload: Dict[str, Any],
+    timeout: float = 15.0,
+) -> Tuple[Optional[Any], Optional[str]]:
     try:
         response = requests.post(url, json=payload, timeout=timeout)
     except RequestException as exc:
@@ -51,7 +216,7 @@ def post_json(url: str, payload: Dict[str, Any], timeout: float = 15.0) -> Tuple
     decoded = decode_response_json(response)
     if response.ok:
         return decoded, None
-    return None, str(decoded)
+    return None, response_error(decoded)
 
 
 def blank_invoice() -> Dict[str, Any]:
@@ -104,15 +269,35 @@ def normalize_invoice(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return invoice
 
 
-def load_current_invoice() -> None:
-    payload, error = get_json(f"{st.session_state.erp_backend_api}/erp/get_current_invoice")
-    if error:
-        st.error(f"Could not load current invoice: {error}")
-        return
-    if not isinstance(payload, dict):
-        st.error("Unexpected ERP handoff payload.")
+def _query_param_value(name: str) -> Optional[str]:
+    try:
+        value = st.query_params.get(name)
+    except Exception:
+        return None
+    if isinstance(value, list):
+        value = value[0] if value else None
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def apply_query_context() -> None:
+    backend_api = _query_param_value("backend_api")
+    invoice_id = _query_param_value("invoice_id")
+    signature = (backend_api, invoice_id)
+    if signature == st.session_state.get("erp_query_signature"):
         return
 
+    if backend_api:
+        st.session_state.erp_backend_api = backend_api.rstrip("/")
+    if invoice_id:
+        st.session_state.erp_target_invoice_id = invoice_id
+
+    st.session_state.erp_query_signature = signature
+
+
+def populate_invoice_state(payload: Dict[str, Any]) -> None:
     invoice = normalize_invoice(payload)
     bank = invoice["bank_details"]
     st.session_state.erp_source_invoice_id = invoice.get("source_invoice_id")
@@ -140,6 +325,37 @@ def load_current_invoice() -> None:
     st.session_state.erp_branch = bank.get("branch", "")
     st.session_state.erp_line_items = json.dumps(invoice.get("line_items", []), indent=2)
     st.session_state.erp_loaded_source_invoice_id = invoice.get("source_invoice_id")
+
+
+def load_current_invoice(invoice_id: Optional[str] = None) -> None:
+    target_invoice_id = invoice_id or st.session_state.get("erp_target_invoice_id")
+
+    if target_invoice_id:
+        payload, error = get_json(f"{st.session_state.erp_backend_api}/erp/invoice/{target_invoice_id}")
+        if error is None and isinstance(payload, dict):
+            populate_invoice_state(payload)
+            return
+
+        _, set_error = post_json(
+            f"{st.session_state.erp_backend_api}/erp/set_current_invoice",
+            {"invoice_id": target_invoice_id},
+        )
+        if set_error:
+            st.error(f"Could not load invoice {target_invoice_id}: {error or set_error}")
+            return
+
+    payload, error = get_json(f"{st.session_state.erp_backend_api}/erp/get_current_invoice")
+    if error:
+        message = f"Could not load current invoice: {error}"
+        if target_invoice_id:
+            message = f"Could not load invoice {target_invoice_id}: {error}"
+        st.error(message)
+        return
+    if not isinstance(payload, dict):
+        st.error("Unexpected ERP handoff payload.")
+        return
+
+    populate_invoice_state(payload)
 
 
 def build_save_payload() -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
@@ -189,23 +405,96 @@ def build_save_payload() -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     return payload, None
 
 
+def _display_value(value: Any, fallback: str = "-") -> str:
+    text = str(value).strip() if value is not None else ""
+    return text or fallback
+
+
+def _numeric_snapshot(value: Any) -> str:
+    text = str(value).strip() if value is not None else ""
+    if not text:
+        return "-"
+    try:
+        return f"₹{float(text.replace(',', '')):,.2f}"
+    except ValueError:
+        return text
+
+
+def _line_item_count() -> int:
+    try:
+        payload = json.loads(st.session_state.get("erp_line_items", "") or "[]")
+    except json.JSONDecodeError:
+        return 0
+    return len(payload) if isinstance(payload, list) else 0
+
+
+def render_hero() -> None:
+    st.markdown(
+        """
+        <div class="erp-hero">
+          <div class="erp-eyebrow">ERP Handoff</div>
+          <h1>Review-ready invoice data, reshaped for ERP entry.</h1>
+          <p>
+            This workspace receives the reviewed invoice from the processing system, auto-fills the ERP form,
+            and lets your team make final edits before writing a clean record into MySQL.
+          </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_snapshot_metrics() -> None:
+    metrics = [
+        ("Source Invoice", _display_value(st.session_state.get("erp_loaded_source_invoice_id"))),
+        ("Vendor", _display_value(st.session_state.get("erp_vendor_name"))),
+        ("Total Amount", _numeric_snapshot(st.session_state.get("erp_total_amount"))),
+        ("Line Items", str(_line_item_count())),
+    ]
+    cols = st.columns(len(metrics))
+    for col, (label, value) in zip(cols, metrics):
+        col.markdown(
+            f"""
+            <div class="erp-kpi">
+              <div class="erp-kpi-label">{label}</div>
+              <div class="erp-kpi-value">{value}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def section_intro(title: str, copy: str) -> None:
+    st.markdown(f"<div class='erp-section-title'>{title}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='erp-section-copy'>{copy}</div>", unsafe_allow_html=True)
+
+
 def main() -> None:
     init_state()
+    apply_erp_theme()
+    apply_query_context()
 
     with st.sidebar:
         st.header("ERP Settings")
         st.text_input("Backend API", key="erp_backend_api")
-        st.caption("Run with: streamlit run erp_frontend.py --server.port 8502")
+        st.caption("Run with: streamlit run erp_frontend.py --server.port 8503")
+        st.text_input("Target Invoice ID", key="erp_target_invoice_id")
         if st.button("Reload Current Invoice", type="primary", use_container_width=True):
-            load_current_invoice()
+            load_current_invoice(st.session_state.get("erp_target_invoice_id"))
 
     st.title("ERP Invoice Form")
-    st.caption("Reviewed invoice data from the invoice processing system is auto-filled here for ERP entry.")
+    st.caption("Reviewed invoice data from the invoice processing system is auto-filled here for ERP entry without a separate ERP sign-in.")
 
     if st.session_state.erp_last_save_message:
         st.success(st.session_state.erp_last_save_message)
 
-    if st.session_state.erp_loaded_source_invoice_id is None:
+    target_invoice_id = st.session_state.get("erp_target_invoice_id")
+    if (
+        target_invoice_id
+        and target_invoice_id != st.session_state.get("erp_loaded_source_invoice_id")
+    ):
+        load_current_invoice(target_invoice_id)
+    elif st.session_state.erp_loaded_source_invoice_id is None:
         load_current_invoice()
 
     st.info(

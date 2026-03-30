@@ -162,6 +162,21 @@ class InvoiceRepository:
                 rows = await cur.fetchall()
         return [inv for inv in (self._row_to_invoice(row) for row in rows) if inv is not None]
 
+    async def list_recent(
+        self,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        pool = MySQLClient.get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT * FROM invoices ORDER BY upload_time DESC LIMIT %s OFFSET %s",
+                    (int(limit), int(skip)),
+                )
+                rows = await cur.fetchall()
+        return [inv for inv in (self._row_to_invoice(row) for row in rows) if inv is not None]
+
     async def update(
         self,
         invoice_id: str,

@@ -74,6 +74,15 @@ class InMemoryInvoiceRepository:
         rows.sort(key=lambda row: row.get("upload_time") or datetime.min, reverse=True)
         return rows[skip : skip + limit]
 
+    async def list_recent(
+        self,
+        skip: int = 0,
+        limit: int = 50,
+    ):
+        rows = list(self._invoices.values())
+        rows.sort(key=lambda row: row.get("upload_time") or datetime.min, reverse=True)
+        return rows[skip : skip + limit]
+
     async def delete(self, invoice_id: str) -> bool:
         if invoice_id not in self._invoices:
             raise ValueError(f"Invoice not found: {invoice_id}")
@@ -134,6 +143,7 @@ async def async_client(
 
     monkeypatch.setattr(MySQLClient, "connect_mysql", classmethod(_noop_connect))
     monkeypatch.setattr(MySQLClient, "close_mysql", classmethod(_noop_close))
+    monkeypatch.setattr(dependencies.settings, "AUTH_DISABLED", False)
 
     # get_current_user resolves repositories directly from this module.
     monkeypatch.setattr(
@@ -148,6 +158,7 @@ async def async_client(
         lambda plain_password, hashed_password: hashed_password == f"hashed::{plain_password}",
     )
 
+    app.dependency_overrides[dependencies.get_user_repository] = lambda: test_context.user_repo
     app.dependency_overrides[auth.get_user_repository] = lambda: test_context.user_repo
     app.dependency_overrides[upload.get_invoice_repository] = lambda: test_context.invoice_repo
     app.dependency_overrides[upload.get_upload_service] = lambda: test_context.upload_service

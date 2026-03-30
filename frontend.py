@@ -15,6 +15,10 @@ from requests.exceptions import RequestException
 import streamlit as st
 import streamlit.components.v1 as components
 
+# Keep this stable across Streamlit reruns so auth state is only reset
+# when we intentionally change the session schema/version.
+APP_BOOT_MARKER = "frontend-session-v1"
+
 
 def apply_futuristic_theme():
     st.markdown(
@@ -711,6 +715,82 @@ def apply_futuristic_theme():
 
         .if-avatar:hover {
             transform: scale(1.08);
+        }
+
+        .if-user-strip {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(240, 244, 255, 0.68));
+            box-shadow: 0 12px 28px rgba(67, 97, 238, 0.10);
+            padding: 0.9rem 1rem;
+            margin-bottom: 0.9rem;
+            animation: ifNavDrop 0.6s ease both;
+        }
+
+        .if-user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 55%, var(--violet));
+            color: #fff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Outfit", sans-serif !important;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            box-shadow: 0 10px 24px rgba(123, 47, 247, 0.28);
+            flex-shrink: 0;
+        }
+
+        .if-user-copy {
+            min-width: 0;
+        }
+
+        .if-user-title {
+            font-family: "Outfit", sans-serif !important;
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text) !important;
+        }
+
+        .if-user-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 0.35rem;
+        }
+
+        .if-user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.38rem;
+            border-radius: 999px;
+            padding: 0.28rem 0.68rem;
+            background: rgba(67, 97, 238, 0.08);
+            border: 1px solid rgba(67, 97, 238, 0.10);
+            color: var(--text2) !important;
+            font-size: 0.74rem;
+            line-height: 1;
+        }
+
+        .if-user-chip.role {
+            background: rgba(6, 214, 160, 0.10);
+            border-color: rgba(6, 214, 160, 0.18);
+            color: #047857 !important;
+            font-weight: 700;
+        }
+
+        .if-user-chip.presence {
+            background: rgba(14, 165, 233, 0.10);
+            border-color: rgba(14, 165, 233, 0.16);
+            color: #075985 !important;
+            font-weight: 700;
         }
 
         .if-hero {
@@ -1957,6 +2037,14 @@ def apply_futuristic_theme():
                 flex-wrap: wrap;
             }
 
+            .if-user-strip {
+                align-items: flex-start;
+            }
+
+            .if-user-meta {
+                gap: 6px;
+            }
+
             .if-hero-gem {
                 width: 78px;
                 height: 78px;
@@ -2929,10 +3017,21 @@ def render_recent_upload_panel():
 
 
 def init_state():
+    if st.session_state.get("app_boot_marker") != APP_BOOT_MARKER:
+        st.session_state.app_boot_marker = APP_BOOT_MARKER
+        st.session_state.auth_token = None
+        st.session_state.auth_user = None
+        st.session_state.auth_notice = "Please sign in to continue."
     if "backend_port" not in st.session_state:
         st.session_state.backend_port = 8000
     if "base_url" not in st.session_state:
         st.session_state.base_url = f"http://localhost:{st.session_state.backend_port}/api"
+    if "auth_token" not in st.session_state:
+        st.session_state.auth_token = None
+    if "auth_user" not in st.session_state:
+        st.session_state.auth_user = None
+    if "auth_notice" not in st.session_state:
+        st.session_state.auth_notice = None
     if "history" not in st.session_state:
         st.session_state.history = []
     if "review_details" not in st.session_state:
@@ -2974,8 +3073,251 @@ def init_state():
     sync_backend_endpoint()
 
 
-def api_headers() -> dict:
-    return {}
+def clear_user_workspace_state():
+    st.session_state.history = []
+    st.session_state.review_details = None
+    st.session_state.review_json = ""
+    st.session_state.review_loaded_invoice_id = None
+    st.session_state.review_load_error = None
+    st.session_state.review_auto_refresh = True
+    st.session_state.last_uploads = []
+    st.session_state.upload_activity = []
+    st.session_state.active_invoice_id = None
+    st.session_state.export_id = ""
+    st.session_state.process_status = None
+    st.session_state.review_notes = ""
+    st.session_state.review_approved = True
+
+
+def clear_auth_state(notice: Optional[str] = None):
+    st.session_state.auth_token = None
+    st.session_state.auth_user = None
+    st.session_state.auth_notice = notice
+    clear_user_workspace_state()
+
+
+def set_authenticated_user(token: str, user: Dict[str, Any]):
+    st.session_state.auth_token = token
+    st.session_state.auth_user = user
+    st.session_state.auth_notice = None
+
+
+def api_headers(token: Optional[str] = None) -> dict:
+    selected_token = token if token is not None else st.session_state.get("auth_token")
+    if not selected_token:
+        return {}
+    return {"Authorization": f"Bearer {selected_token}"}
+
+
+def error_detail(payload: Any) -> str:
+    if isinstance(payload, dict):
+        detail = payload.get("detail") or payload.get("error") or payload.get("message")
+        if isinstance(detail, (dict, list)):
+            return json.dumps(detail)
+        if detail is not None:
+            return str(detail)
+    return str(payload)
+
+
+def handle_api_auth_failure(res: Any, use_auth: bool = True):
+    if not use_auth or isinstance(res, dict):
+        return
+    if getattr(res, "status_code", None) != 401:
+        return
+    if not st.session_state.get("auth_token"):
+        return
+    payload = response_payload(res)
+    detail = error_detail(payload)
+    message = "Your session expired. Please sign in again."
+    if detail and detail != "None":
+        message = f"{message} {detail}"
+    clear_auth_state(message)
+
+
+def fetch_current_user_profile(token: Optional[str] = None) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    try:
+        response = requests.get(
+            f"{st.session_state.base_url}/auth/me",
+            headers=api_headers(token),
+            timeout=10.0,
+        )
+    except RequestException as exc:
+        return None, f"Backend not reachable: {exc}"
+    payload = response_payload(response)
+    if response.status_code == 200 and isinstance(payload, dict):
+        return payload, None
+    return None, error_detail(payload)
+
+
+def ensure_authenticated_user() -> bool:
+    token = st.session_state.get("auth_token")
+    if not token:
+        return False
+    auth_user = st.session_state.get("auth_user")
+    if isinstance(auth_user, dict) and auth_user.get("email"):
+        return True
+    profile, error = fetch_current_user_profile(token)
+    if error:
+        clear_auth_state(f"Please sign in again. {error}")
+        return False
+    st.session_state.auth_user = profile
+    return True
+
+
+def authenticate_user(email: str, password: str) -> Optional[str]:
+    email = email.strip().lower()
+    if not email or not password:
+        return "Email and password are required."
+
+    response = post_json(
+        f"{st.session_state.base_url}/auth/login",
+        {"email": email, "password": password},
+        use_auth=False,
+        timeout=20.0,
+    )
+    if isinstance(response, dict) and response.get("_error"):
+        return response["_error"]
+
+    payload = ensure_dict_payload(response_payload(response))
+    if getattr(response, "status_code", None) != 200:
+        return error_detail(payload)
+
+    token = payload.get("access_token")
+    if not token:
+        return "Login completed, but no access token was returned."
+
+    profile, error = fetch_current_user_profile(token)
+    if error:
+        return f"Login succeeded, but loading your profile failed: {error}"
+
+    set_authenticated_user(token, profile)
+    return None
+
+
+def register_user(full_name: str, company: str, email: str, password: str, confirm_password: str) -> Optional[str]:
+    full_name = full_name.strip()
+    company = company.strip()
+    email = email.strip().lower()
+
+    if not full_name or not company or not email or not password:
+        return "Full name, company, email, and password are required."
+    if password != confirm_password:
+        return "Passwords do not match."
+
+    response = post_json(
+        f"{st.session_state.base_url}/auth/register",
+        {
+            "full_name": full_name,
+            "company": company,
+            "email": email,
+            "password": password,
+        },
+        use_auth=False,
+        timeout=20.0,
+    )
+    if isinstance(response, dict) and response.get("_error"):
+        return response["_error"]
+
+    payload = ensure_dict_payload(response_payload(response))
+    if getattr(response, "status_code", None) != 200:
+        return error_detail(payload)
+
+    return authenticate_user(email, password)
+
+
+def render_auth_gate():
+    st.title("Sign In To invoiceflow")
+    st.caption("Authentication is required before you can access uploads, review, exports, and ERP handoff.")
+    render_section_intro(
+        "Secure Access",
+        "Create an account or sign in before using the invoice workspace.",
+    )
+
+    if st.session_state.get("auth_notice"):
+        st.info(st.session_state.auth_notice)
+
+    info_col, auth_col = st.columns([1.2, 1], gap="large")
+    with info_col:
+        st.markdown(
+            """
+            <div class="if-card if-reveal">
+              <div class="if-card-title">Protected invoice workspace</div>
+              <p>
+                Authentication now protects uploads, review actions, exports, and ERP handoff data.
+                Sign in to continue, or create a new local account to get started.
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption("Your session token stays in Streamlit session state for this browser session only.")
+
+    with auth_col:
+        sign_in_tab, register_tab = st.tabs(["Sign In", "Create Account"])
+        with sign_in_tab:
+            with st.form("login_form"):
+                email = st.text_input("Email", key="login_email")
+                password = st.text_input("Password", type="password", key="login_password")
+                submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+            if submitted:
+                error = authenticate_user(email, password)
+                if error:
+                    st.error(error)
+                else:
+                    st.rerun()
+
+        with register_tab:
+            with st.form("register_form"):
+                full_name = st.text_input("Full Name", key="register_full_name")
+                company = st.text_input("Company", key="register_company")
+                email = st.text_input("Email", key="register_email")
+                password = st.text_input("Password", type="password", key="register_password")
+                confirm_password = st.text_input(
+                    "Confirm Password",
+                    type="password",
+                    key="register_password_confirm",
+                )
+                submitted = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+            if submitted:
+                error = register_user(full_name, company, email, password, confirm_password)
+                if error:
+                    st.error(error)
+                else:
+                    st.success("Account created and signed in.")
+                    st.rerun()
+
+
+def render_session_bar():
+    user = st.session_state.get("auth_user") or {}
+    name = user.get("full_name") or user.get("email") or "User"
+    email = user.get("email") or ""
+    company = user.get("company") or "-"
+    role = str(user.get("role") or "user").upper()
+    initials = "".join(part[:1] for part in name.split() if part)[:2].upper() or name[:2].upper() or "U"
+
+    info_col, action_col = st.columns([5.2, 1], gap="small")
+    with info_col:
+        st.markdown(
+            f"""
+            <div class="if-user-strip if-reveal">
+              <div class="if-user-avatar">{html.escape(initials)}</div>
+              <div class="if-user-copy">
+                <div class="if-user-title">Signed in as {html.escape(name)}</div>
+                <div class="if-user-meta">
+                  <span class="if-user-chip presence">Active session</span>
+                  <span class="if-user-chip">{html.escape(email or "No email")}</span>
+                  <span class="if-user-chip">{html.escape(company)}</span>
+                  <span class="if-user-chip role">{html.escape(role)}</span>
+                </div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with action_col:
+        if st.button("Log out", width='stretch', key="logout_btn"):
+            clear_auth_state("You signed out.")
+            st.rerun()
 
 
 def port_in_use(host: str, port: int, timeout: float = 0.4) -> bool:
@@ -2991,10 +3333,7 @@ def backend_usable_without_auth(port: int) -> bool:
     base = f"http://127.0.0.1:{port}"
     try:
         health = requests.get(f"{base}/health", timeout=1.0)
-        if health.status_code != 200:
-            return False
-        me = requests.get(f"{base}/api/auth/me", timeout=1.0)
-        return me.status_code == 200
+        return health.status_code == 200
     except RequestException:
         return False
 
@@ -3102,9 +3441,13 @@ def post_json(url: str, payload: Optional[dict] = None, use_auth: bool = True, t
         headers.update(api_headers())
     try:
         if payload is None:
-            return requests.post(url, headers=headers, timeout=timeout)
+            response = requests.post(url, headers=headers, timeout=timeout)
+            handle_api_auth_failure(response, use_auth=use_auth)
+            return response
         headers["Content-Type"] = "application/json"
-        return requests.post(url, json=payload, headers=headers, timeout=timeout)
+        response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+        handle_api_auth_failure(response, use_auth=use_auth)
+        return response
     except RequestException as e:
         original_base = st.session_state.base_url
         sync_backend_endpoint()
@@ -3113,16 +3456,23 @@ def post_json(url: str, payload: Optional[dict] = None, use_auth: bool = True, t
             retry_url = swap_url_base(url, original_base, fallback_base)
             try:
                 if payload is None:
-                    return requests.post(retry_url, headers=headers, timeout=timeout)
-                return requests.post(retry_url, json=payload, headers=headers, timeout=timeout)
+                    response = requests.post(retry_url, headers=headers, timeout=timeout)
+                    handle_api_auth_failure(response, use_auth=use_auth)
+                    return response
+                response = requests.post(retry_url, json=payload, headers=headers, timeout=timeout)
+                handle_api_auth_failure(response, use_auth=use_auth)
+                return response
             except RequestException as retry_error:
                 return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
         return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
 
 
-def get_json(url: str, timeout: float = 15.0):
+def get_json(url: str, timeout: float = 15.0, use_auth: bool = True):
+    headers = api_headers() if use_auth else {}
     try:
-        return requests.get(url, headers=api_headers(), timeout=timeout)
+        response = requests.get(url, headers=headers, timeout=timeout)
+        handle_api_auth_failure(response, use_auth=use_auth)
+        return response
     except RequestException as e:
         original_base = st.session_state.base_url
         sync_backend_endpoint()
@@ -3130,7 +3480,9 @@ def get_json(url: str, timeout: float = 15.0):
         if fallback_base != original_base:
             retry_url = swap_url_base(url, original_base, fallback_base)
             try:
-                return requests.get(retry_url, headers=api_headers(), timeout=timeout)
+                response = requests.get(retry_url, headers=headers, timeout=timeout)
+                handle_api_auth_failure(response, use_auth=use_auth)
+                return response
             except RequestException as retry_error:
                 return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
         return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
@@ -3139,19 +3491,23 @@ def get_json(url: str, timeout: float = 15.0):
 def upload_single_file(base_url: str, filename: str, content: bytes, content_type: str):
     files = {"files": (filename, content, content_type)}
     try:
-        return requests.post(f"{base_url}/invoices/upload", headers=api_headers(), files=files, timeout=60)
+        response = requests.post(f"{base_url}/invoices/upload", headers=api_headers(), files=files, timeout=60)
+        handle_api_auth_failure(response)
+        return response
     except RequestException as e:
         original_base = base_url
         sync_backend_endpoint()
         fallback_base = st.session_state.base_url
         if fallback_base != original_base:
             try:
-                return requests.post(
+                response = requests.post(
                     f"{fallback_base}/invoices/upload",
                     headers=api_headers(),
                     files=files,
                     timeout=60,
                 )
+                handle_api_auth_failure(response)
+                return response
             except RequestException as retry_error:
                 return {"_error": f"Backend offline. Start it at {fallback_base}. Details: {retry_error}"}
         return {"_error": f"Backend offline. Start it at {st.session_state.base_url}. Details: {e}"}
@@ -3685,8 +4041,6 @@ def main():
     init_state()
     apply_futuristic_theme()
     render_live_background()
-    render_main_header()
-    render_capability_cards()
 
     backend_ok, backend_status = check_backend(st.session_state.base_url)
     st.session_state.backend_ok = backend_ok
@@ -3697,8 +4051,6 @@ def main():
         st.session_state.backend_ok = backend_ok
         st.session_state.backend_status = backend_status
 
-    render_dashboard_panel(st.session_state.backend_ok, st.session_state.backend_status)
-
     if not st.session_state.get("backend_ok", False):
         inject_motion_runtime()
         st.error(f"Backend is offline. Start it at {st.session_state.base_url} and try again.")
@@ -3706,6 +4058,15 @@ def main():
         st.caption(f"Details: {st.session_state.get('backend_status')}")
         return
 
+    if not ensure_authenticated_user():
+        render_auth_gate()
+        inject_motion_runtime()
+        return
+
+    render_session_bar()
+    render_main_header()
+    render_capability_cards()
+    render_dashboard_panel(st.session_state.backend_ok, st.session_state.backend_status)
     tabs = st.tabs(["Upload", "Review", "Export"])
     with tabs[0]:
         render_upload()

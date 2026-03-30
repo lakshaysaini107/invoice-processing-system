@@ -63,12 +63,10 @@ async def test_list_invoices(authenticated_client):
 
 @pytest.mark.asyncio
 async def test_get_current_user_without_auth(async_client):
-    """With auth disabled, /auth/me should return a public user."""
+    """Without a token, authenticated routes should reject the request."""
     response = await async_client.get("/api/auth/me")
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["email"] == "public@local"
-    assert data["role"] == "admin"
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
@@ -91,7 +89,32 @@ async def test_process_status_defaults_current_step(authenticated_client, tmp_pa
 
 @pytest.mark.asyncio
 async def test_upload_invoice_without_auth(async_client, tmp_path):
-    """With auth disabled, uploads should work without Authorization headers."""
+    """Uploads require a bearer token when auth is enabled."""
+    test_file = tmp_path / "public_invoice.pdf"
+    test_file.write_text("public invoice content")
+
+    with open(test_file, "rb") as f:
+        files = {"files": (f.name, f, "application/pdf")}
+        response = await async_client.post("/api/invoices/upload", files=files)
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_with_auth_disabled_returns_public_user(async_client, monkeypatch):
+    monkeypatch.setattr("backend.app.dependencies.settings.AUTH_DISABLED", True)
+
+    response = await async_client.get("/api/auth/me")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["email"] == "public@local"
+    assert data["role"] == "admin"
+
+
+@pytest.mark.asyncio
+async def test_upload_invoice_with_auth_disabled_allows_public_access(async_client, tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.app.dependencies.settings.AUTH_DISABLED", True)
     test_file = tmp_path / "public_invoice.pdf"
     test_file.write_text("public invoice content")
 

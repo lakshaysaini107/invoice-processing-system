@@ -1,1 +1,17 @@
+# Install everything for the current project from this root file.
+# The backend-only dependency list is kept in backend/requirements.txt.
 
+-r backend/requirements.txt
+
+# Streamlit frontends
+streamlit>=1.32.0
+requests>=2.31.0
+
+# Test client used by backend/tests
+httpx>=0.27.0
+
+# Required if you want PaddleOCR to run instead of the Tesseract fallback.
+paddlepaddle>=2.6.0
+
+# Optional but recommended local model download:
+# python -m spacy download en_core_web_sm

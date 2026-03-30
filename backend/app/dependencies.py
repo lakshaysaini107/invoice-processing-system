@@ -1,7 +1,8 @@
 from datetime import datetime
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Dict, Any, Optional
+from backend.app.config import settings
 from backend.database.repositories.user_repo import UserRepository
 from backend.database.repositories.invoice_repo import InvoiceRepository
 from backend.database.repositories.erp_invoice_repo import ERPInvoiceRepository
@@ -19,32 +20,77 @@ class TokenData:
         self.role = role
 
 
+# Dependency functions for repositories and services
+def get_user_repository():
+    """Dependency for UserRepository"""
+    return UserRepository()
+
+
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    user_repo: UserRepository = Depends(get_user_repository),
 ) -> Dict[str, Any]:
-    """Authentication is disabled: always return a guest user context."""
-    return {
-        "_id": "public",
-        "email": "public@local",
-        "full_name": "Public User",
-        "company": "Public",
-        "role": "admin",
-        "is_active": True,
-        "created_at": datetime.utcnow(),
-    }
+    if settings.AUTH_DISABLED:
+        return {
+            "_id": "public",
+            "email": "public@local",
+            "full_name": "Public User",
+            "company": "Public",
+            "role": "admin",
+            "is_active": True,
+            "created_at": datetime.utcnow(),
+        }
+
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    from backend.core.security import verify_token
+
+    payload = verify_token(credentials.credentials)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = await user_repo.get_by_id(str(user_id))
+    if not user or not user.get("is_active", True):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
 
 
 async def get_admin_user(
     current_user: Dict[str, Any] = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Authentication is disabled: allow all users as admin context."""
+    if settings.AUTH_DISABLED:
+        return current_user
+
+    if str(current_user.get("role")) != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
     return current_user
 
-
-# Dependency functions for repositories and services
-def get_user_repository():
-    """Dependency for UserRepository"""
-    return UserRepository()
 
 def get_invoice_repository():
     """Dependency for InvoiceRepository"""

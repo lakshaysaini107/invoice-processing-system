@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timedelta
 
 from backend.api import erp
 from backend.app.dependencies import get_erp_current_invoice_store, get_erp_invoice_repository
@@ -70,6 +71,78 @@ async def test_get_current_invoice_returns_handoff_payload(async_client):
     payload = response.json()
     assert payload["source_invoice_id"] == "inv-2"
     assert payload["vendor_name"] == "Vendor Two"
+
+
+@pytest.mark.asyncio
+async def test_set_current_invoice_without_auth_uses_latest_eligible_invoice(async_client, test_context):
+    test_context.invoice_repo._invoices["inv-old"] = {
+        "invoice_id": "inv-old",
+        "user_id": "user-a",
+        "filename": "old.pdf",
+        "upload_time": datetime.utcnow() - timedelta(hours=1),
+        "processing_status": "reviewed",
+        "review_status": "approved",
+        "extracted_data": {
+            "invoice_number": "INV-OLD",
+            "vendor_name": "Older Vendor",
+            "bank_details": {"account_number": "1111"},
+        },
+    }
+    test_context.invoice_repo._invoices["inv-new"] = {
+        "invoice_id": "inv-new",
+        "user_id": "user-b",
+        "filename": "new.pdf",
+        "upload_time": datetime.utcnow(),
+        "processing_status": "reviewed",
+        "review_status": "approved",
+        "extracted_data": {
+            "invoice_number": "INV-NEW",
+            "vendor_name": "Newest Vendor",
+            "bank_details": {"account_number": "2222"},
+        },
+    }
+    current_store = {}
+
+    app.dependency_overrides[erp.get_invoice_repository] = lambda: test_context.invoice_repo
+    app.dependency_overrides[get_erp_current_invoice_store] = lambda: current_store
+    try:
+        response = await async_client.post("/api/erp/set_current_invoice", json={})
+    finally:
+        app.dependency_overrides.pop(erp.get_invoice_repository, None)
+        app.dependency_overrides.pop(get_erp_current_invoice_store, None)
+
+    assert response.status_code == 200
+    assert current_store["source_invoice_id"] == "inv-new"
+    assert current_store["invoice_number"] == "INV-NEW"
+
+
+@pytest.mark.asyncio
+async def test_get_invoice_for_erp_returns_selected_invoice(async_client, test_context):
+    test_context.invoice_repo._invoices["inv-erp"] = {
+        "invoice_id": "inv-erp",
+        "user_id": "public",
+        "filename": "invoice-erp.pdf",
+        "processing_status": "reviewed",
+        "review_status": "approved",
+        "extracted_data": {
+            "invoice_number": "INV-ERP",
+            "vendor_name": "ERP Vendor",
+            "line_items": [],
+            "bank_details": {"account_number": "123456789"},
+        },
+    }
+
+    app.dependency_overrides[erp.get_invoice_repository] = lambda: test_context.invoice_repo
+    try:
+        response = await async_client.get("/api/erp/invoice/inv-erp")
+    finally:
+        app.dependency_overrides.pop(erp.get_invoice_repository, None)
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["source_invoice_id"] == "inv-erp"
+    assert payload["invoice_number"] == "INV-ERP"
+    assert payload["vendor_name"] == "ERP Vendor"
 
 
 @pytest.mark.asyncio
