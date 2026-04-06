@@ -19,13 +19,14 @@ Make sure these files are committed:
 
 Use a free MySQL host such as Aiven MySQL Free Tier.
 
-Create a database and copy the connection string in this format:
+From Aiven, copy these values from the service Overview page:
 
-```text
-mysql://USER:PASSWORD@HOST:PORT/DATABASE
-```
+- Host
+- Port
+- Username
+- Password
 
-If your password contains special characters, URL-encode it before saving.
+Use the default Aiven database name: `defaultdb`
 
 ## 3. Deploy to Render
 
@@ -33,7 +34,14 @@ If your password contains special characters, URL-encode it before saving.
 2. Click `New` -> `Blueprint`.
 3. Connect your GitHub repo.
 4. Render will detect `render.yaml`.
-5. When prompted, set `MYSQL_URL` to your database connection string.
+5. When prompted, set:
+
+   - `MYSQL_HOST`
+   - `MYSQL_PORT`
+   - `MYSQL_USER`
+   - `MYSQL_PASSWORD`
+
+   `MYSQL_DATABASE` is already set to `defaultdb`.
 6. Create the service and wait for the build to finish.
 
 ## 4. Open the app
@@ -57,7 +65,7 @@ After deploy:
 If the app page opens but says backend is offline:
 
 - Check Render logs for MySQL connection errors.
-- Verify `MYSQL_URL` is correct.
+- Verify the Aiven host, port, user, and password are correct.
 - Make sure the database is reachable from Render.
 
 If OCR is too slow:

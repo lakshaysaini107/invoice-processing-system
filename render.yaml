@@ -15,5 +15,13 @@ services:
         value: "true"
       - key: SECRET_KEY
         generateValue: true
-      - key: MYSQL_URL
+      - key: MYSQL_HOST
         sync: false
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DATABASE
+        value: "defaultdb"
