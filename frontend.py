@@ -4148,7 +4148,7 @@ def select_backend_port() -> int:
 
 def sync_backend_endpoint():
     selected_port = select_backend_port()
-    selected_base = f"http://localhost:{selected_port}/api"
+    selected_base = f"http://127.0.0.1:{selected_port}/api"
     if (
         st.session_state.get("backend_port") != selected_port
         or st.session_state.get("base_url") != selected_base
