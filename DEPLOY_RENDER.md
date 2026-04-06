@@ -43,6 +43,7 @@ Use the default Aiven database name: `defaultdb`
 
    `MYSQL_DATABASE` is already set to `defaultdb`.
    `MYSQL_SSL_MODE` is already set to `required`.
+   `MYSQL_SKIP_DB_CREATE` is already set to `true`.
 6. Create the service and wait for the build to finish.
 
 ## 4. Open the app

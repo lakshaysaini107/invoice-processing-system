@@ -118,7 +118,8 @@ class MySQLClient:
             return
 
         conn_kwargs = cls._connection_kwargs()
-        await cls._ensure_database_exists(conn_kwargs)
+        if not bool(getattr(settings, "MYSQL_SKIP_DB_CREATE", False)):
+            await cls._ensure_database_exists(conn_kwargs)
         try:
             cls.pool = await aiomysql.create_pool(
                 minsize=settings.MYSQL_MIN_POOL_SIZE,

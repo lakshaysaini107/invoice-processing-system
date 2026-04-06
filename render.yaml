@@ -27,3 +27,5 @@ services:
         value: "defaultdb"
       - key: MYSQL_SSL_MODE
         value: "required"
+      - key: MYSQL_SKIP_DB_CREATE
+        value: "true"

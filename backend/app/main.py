@@ -24,7 +24,7 @@ async def startup_event():
         await MySQLClient.connect_mysql()
         logger.info("MySQL connected")
     except Exception as e:
-        logger.error(f"Failed to connect to MySQL: {str(e)}")
+        logger.exception("Failed to connect to MySQL: %s", str(e))
         raise
 
 
