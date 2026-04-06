@@ -25,3 +25,5 @@ services:
         sync: false
       - key: MYSQL_DATABASE
         value: "defaultdb"
+      - key: MYSQL_SSL_MODE
+        value: "required"

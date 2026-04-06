@@ -1,6 +1,7 @@
 import re
+import ssl
 from typing import Any, Dict, Optional
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import aiomysql
 
@@ -28,6 +29,7 @@ class MySQLClient:
 
     @classmethod
     def _connection_kwargs(cls) -> Dict[str, Any]:
+        ssl_mode = (getattr(settings, "MYSQL_SSL_MODE", "") or "").strip()
         if settings.MYSQL_URL:
             parsed = urlparse(settings.MYSQL_URL)
             if parsed.scheme not in {"mysql", "mysql+pymysql"}:
@@ -35,12 +37,18 @@ class MySQLClient:
             database = parsed.path.lstrip("/")
             if not database:
                 raise ValueError("MYSQL_URL must include a database name")
+            query = parse_qs(parsed.query)
+            ssl_mode = (
+                ssl_mode
+                or (query.get("ssl-mode") or query.get("ssl_mode") or [""])[0]
+            )
             return {
                 "host": parsed.hostname or settings.MYSQL_HOST,
                 "port": parsed.port or settings.MYSQL_PORT,
                 "user": unquote(parsed.username or settings.MYSQL_USER),
                 "password": unquote(parsed.password or settings.MYSQL_PASSWORD),
                 "db": database,
+                **cls._ssl_kwargs(ssl_mode),
             }
         return {
             "host": settings.MYSQL_HOST,
@@ -48,7 +56,34 @@ class MySQLClient:
             "user": settings.MYSQL_USER,
             "password": settings.MYSQL_PASSWORD,
             "db": settings.MYSQL_DATABASE,
+            **cls._ssl_kwargs(ssl_mode),
         }
+
+    @classmethod
+    def _ssl_kwargs(cls, ssl_mode: str) -> Dict[str, Any]:
+        normalized = (ssl_mode or "").strip().lower().replace("-", "_")
+        if not normalized or normalized in {"disabled", "disable", "off", "false", "0"}:
+            return {}
+
+        context = ssl.create_default_context()
+
+        # Match MySQL's ssl-mode semantics closely enough for managed services.
+        if normalized in {"required", "preferred"}:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+        elif normalized == "verify_ca":
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_REQUIRED
+        elif normalized == "verify_identity":
+            context.check_hostname = True
+            context.verify_mode = ssl.CERT_REQUIRED
+        else:
+            raise ValueError(
+                "MYSQL_SSL_MODE must be one of: disabled, preferred, required, "
+                "verify_ca, verify_identity"
+            )
+
+        return {"ssl": context}
 
     @classmethod
     def _validate_database_name(cls, database: str) -> str:

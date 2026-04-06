@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     MYSQL_USER: str = "root"
     MYSQL_PASSWORD: str = ""
     MYSQL_DATABASE: str = "invoices"
+    MYSQL_SSL_MODE: str = ""
     MYSQL_MIN_POOL_SIZE: int = 1
     MYSQL_MAX_POOL_SIZE: int = 10
 

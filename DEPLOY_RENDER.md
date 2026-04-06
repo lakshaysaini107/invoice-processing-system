@@ -42,6 +42,7 @@ Use the default Aiven database name: `defaultdb`
    - `MYSQL_PASSWORD`
 
    `MYSQL_DATABASE` is already set to `defaultdb`.
+   `MYSQL_SSL_MODE` is already set to `required`.
 6. Create the service and wait for the build to finish.
 
 ## 4. Open the app
@@ -66,6 +67,7 @@ If the app page opens but says backend is offline:
 
 - Check Render logs for MySQL connection errors.
 - Verify the Aiven host, port, user, and password are correct.
+- Confirm `MYSQL_SSL_MODE=required`.
 - Make sure the database is reachable from Render.
 
 If OCR is too slow:
