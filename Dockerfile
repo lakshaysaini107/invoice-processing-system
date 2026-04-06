@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE 8501
 
-CMD ["sh", "-c", "streamlit run frontend.py --server.address 0.0.0.0 --server.port ${PORT:-8501} --server.headless true"]
+CMD ["sh", "-c", "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 & BACKEND_PID=$!; streamlit run frontend.py --server.address 0.0.0.0 --server.port ${PORT:-8501} --server.headless true & FRONTEND_PID=$!; wait -n $BACKEND_PID $FRONTEND_PID; exit $?"]

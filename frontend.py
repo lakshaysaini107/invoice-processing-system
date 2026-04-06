@@ -3548,7 +3548,7 @@ def init_state():
     if "backend_port" not in st.session_state:
         st.session_state.backend_port = 8000
     if "base_url" not in st.session_state:
-        st.session_state.base_url = f"http://localhost:{st.session_state.backend_port}/api"
+        st.session_state.base_url = f"http://127.0.0.1:{st.session_state.backend_port}/api"
     if "auth_token" not in st.session_state:
         st.session_state.auth_token = None
     if "auth_user" not in st.session_state:
