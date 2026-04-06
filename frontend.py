@@ -6,9 +6,10 @@ import socket
 import subprocess
 import sys
 import time
+import webbrowser
 import zipfile
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import requests
 from requests.exceptions import RequestException
@@ -791,6 +792,451 @@ def apply_futuristic_theme():
             border-color: rgba(14, 165, 233, 0.16);
             color: #075985 !important;
             font-weight: 700;
+        }
+
+        .if-auth-card-marker {
+            display: none;
+        }
+
+        .main .block-container:has(.if-auth-screen) {
+            max-width: 980px;
+            min-height: calc(100vh - 2.5rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 1rem;
+            padding-right: 1rem;
+            padding-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        .if-auth-screen {
+            position: relative;
+            text-align: center;
+            padding: 0 0 0.8rem;
+            margin: 0 auto 0.9rem;
+        }
+
+        .if-auth-screen::before {
+            content: "";
+            position: absolute;
+            inset: -1rem 10% auto;
+            height: 250px;
+            border-radius: 999px;
+            background:
+                radial-gradient(circle at 50% 18%, rgba(67, 97, 238, 0.16), transparent 38%),
+                radial-gradient(circle at 24% 58%, rgba(123, 47, 247, 0.12), transparent 30%),
+                radial-gradient(circle at 76% 56%, rgba(14, 165, 233, 0.12), transparent 28%);
+            filter: blur(18px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .if-auth-brand {
+            position: relative;
+            z-index: 1;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0.15rem 0 0;
+        }
+
+        .if-auth-brand::before {
+            content: "";
+            position: absolute;
+            inset: 1.8rem 10% auto;
+            height: 170px;
+            border-radius: 26px;
+            border: 1px solid rgba(255, 255, 255, 0.52);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.14)),
+                radial-gradient(circle at top, rgba(67, 97, 238, 0.10), transparent 72%);
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.05);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .if-auth-badge {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto 0.8rem;
+            padding: 0.48rem 0.92rem;
+            border-radius: 999px;
+            border: 1px solid rgba(99, 102, 241, 0.20);
+            background: rgba(255, 255, 255, 0.78);
+            color: var(--blue) !important;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            box-shadow: 0 12px 24px rgba(148, 163, 184, 0.08);
+            animation: ifBadgeWave 6s ease-in-out infinite;
+        }
+
+        .if-auth-badge::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--blue), var(--indigo));
+            box-shadow: 0 0 0 5px rgba(67, 97, 238, 0.10);
+        }
+
+        .if-auth-logo {
+            position: relative;
+            z-index: 1;
+            width: 82px;
+            height: 82px;
+            margin: 0 auto 0.8rem;
+            border-radius: 24px;
+            background: linear-gradient(145deg, var(--blue), var(--indigo) 58%, var(--violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 18px 42px rgba(67, 97, 238, 0.18),
+                0 8px 24px rgba(123, 47, 247, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.24);
+            animation: ifLogoOrbit 10s ease-in-out infinite;
+        }
+
+        .if-auth-logo::after {
+            content: "";
+            position: absolute;
+            inset: -12px;
+            border-radius: 28px;
+            background: radial-gradient(circle, rgba(123, 47, 247, 0.16), transparent 70%);
+            z-index: -1;
+        }
+
+        .if-auth-logo svg {
+            width: 54px;
+            height: 54px;
+            display: block;
+        }
+
+        .if-auth-title {
+            position: relative;
+            z-index: 1;
+            font-family: "Outfit", sans-serif !important;
+            font-size: clamp(2.55rem, 5vw, 3.6rem);
+            font-weight: 900;
+            letter-spacing: -0.06em;
+            line-height: 0.93;
+            margin-bottom: 0.65rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--blue) 36%, var(--indigo) 68%, var(--violet) 100%);
+            background-size: 180% 180%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: ifGradientFlow 10s ease infinite;
+        }
+
+        .if-auth-title span {
+            background: linear-gradient(135deg, var(--blue) 10%, var(--indigo) 58%, var(--violet) 100%);
+            background-size: 180% 180%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: ifGradientFlow 10s ease infinite;
+        }
+
+        .if-auth-copy {
+            position: relative;
+            z-index: 1;
+            max-width: 520px;
+            margin: 0 auto;
+            color: rgba(51, 65, 85, 0.84) !important;
+            font-size: 0.97rem;
+            line-height: 1.62;
+        }
+
+        .if-auth-highlights {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            max-width: 560px;
+            margin: 0.85rem auto 0;
+        }
+
+        .if-auth-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.58rem 0.85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(99, 102, 241, 0.16);
+            background: rgba(255, 255, 255, 0.82);
+            color: #334155 !important;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: 0 10px 18px rgba(148, 163, 184, 0.10);
+        }
+
+        .if-auth-highlight::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--blue), var(--indigo));
+            box-shadow: 0 0 0 5px rgba(67, 97, 238, 0.10);
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) {
+            position: relative;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            border-radius: 24px;
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+            backdrop-filter: blur(18px);
+            box-shadow:
+                0 18px 40px rgba(67, 97, 238, 0.12),
+                0 8px 18px rgba(123, 47, 247, 0.08);
+            overflow: hidden;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker))::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 18px;
+            border: 1px solid rgba(99, 102, 241, 0.12);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0));
+            pointer-events: none;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker))::after {
+            content: "";
+            position: absolute;
+            left: 16%;
+            right: 16%;
+            top: 0;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 0%, rgba(67, 97, 238, 0.12), rgba(123, 47, 247, 0.08), transparent 72%);
+            filter: blur(28px);
+            pointer-events: none;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) > div {
+            position: relative;
+            z-index: 1;
+        }
+
+        .if-auth-card-head {
+            max-width: 460px;
+            margin: 0 auto 0.8rem;
+            text-align: center;
+        }
+
+        .if-auth-card-title {
+            color: var(--text2) !important;
+            font-family: "Outfit", sans-serif !important;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-top: 0.2rem;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stAlert"] {
+            border-radius: 18px;
+            border: 1px solid rgba(99, 102, 241, 0.18);
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.84));
+            box-shadow: 0 10px 24px rgba(148, 163, 184, 0.10);
+            text-align: center;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] [role="tablist"],
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [data-baseweb="tab-list"] {
+            width: min(100%, 520px);
+            margin: 0 auto 0.95rem;
+            gap: 4px;
+            border-radius: 18px;
+            padding: 5px;
+            border: 1px solid rgba(99, 102, 241, 0.18);
+            background: linear-gradient(135deg, rgba(238, 242, 255, 0.96), rgba(248, 250, 252, 0.90));
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.96),
+                0 12px 28px rgba(148, 163, 184, 0.10);
+            justify-content: center;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] button[role="tab"],
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [data-baseweb="tab"] {
+            min-height: 56px;
+            min-width: 160px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            color: rgba(71, 85, 105, 0.95) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+            flex: 1 1 0;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] button[role="tab"]::after,
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [data-baseweb="tab"]::after {
+            display: none;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] button[role="tab"]:hover,
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [data-baseweb="tab"]:hover {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.88);
+            color: var(--blue) !important;
+            text-shadow: none;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] [aria-selected="true"],
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [aria-selected="true"] {
+            color: #fff !important;
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 58%, var(--violet));
+            box-shadow: 0 12px 24px rgba(123, 47, 247, 0.22);
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] [role="tabpanel"] {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1.05rem 1rem 0.95rem;
+            border-radius: 22px;
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(238, 242, 255, 0.70));
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                0 16px 36px rgba(148, 163, 184, 0.12);
+            text-align: center;
+        }
+
+        .if-auth-panel-intro {
+            max-width: 430px;
+            margin: 0 auto 0.75rem;
+            text-align: center;
+        }
+
+        .if-auth-panel-kicker {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            padding: 0.36rem 0.72rem;
+            border-radius: 999px;
+            border: 1px solid rgba(99, 102, 241, 0.18);
+            background: rgba(238, 242, 255, 0.92);
+            color: var(--blue) !important;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .if-auth-panel-title {
+            color: var(--text2) !important;
+            font-family: "Outfit", sans-serif !important;
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+        }
+
+        .if-auth-panel-copy {
+            margin-top: 0.4rem;
+            color: rgba(71, 85, 105, 0.82) !important;
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stForm"] {
+            max-width: 560px;
+            margin: 0 auto;
+            background: transparent;
+            border: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTextInput"] {
+            margin-bottom: 0.7rem;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTextInput input {
+            min-height: 56px;
+            border-radius: 16px !important;
+            border: 1px solid rgba(203, 213, 225, 0.9) !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94)) !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.92),
+                0 10px 22px rgba(148, 163, 184, 0.10);
+            font-size: 1rem;
+            padding-left: 1rem !important;
+            color: #0f172a !important;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTextInput input::placeholder {
+            color: rgba(100, 116, 139, 0.72) !important;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTextInput input:focus {
+            border-color: rgba(67, 97, 238, 0.56) !important;
+            box-shadow:
+                0 0 0 4px rgba(67, 97, 238, 0.14),
+                0 14px 28px rgba(123, 47, 247, 0.10) !important;
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stButton > button,
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stFormSubmitButton > button {
+            min-height: 58px;
+            border-radius: 18px;
+            border: none !important;
+            font-size: 1.08rem;
+            font-family: "Outfit", sans-serif !important;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            color: #fff !important;
+            background: linear-gradient(135deg, var(--blue), var(--indigo) 54%, var(--violet)) !important;
+            box-shadow:
+                0 18px 34px rgba(123, 47, 247, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stButton > button:hover,
+        div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stFormSubmitButton > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 22px 42px rgba(123, 47, 247, 0.28);
+        }
+
+        .if-auth-footer {
+            text-align: center;
+            max-width: 100%;
+            margin: 0.85rem auto 0;
+            padding-top: 0.8rem;
+            padding-bottom: 0.2rem;
+            border-top: 1px solid rgba(99, 102, 241, 0.10);
+        }
+
+        .if-auth-footer-copy {
+            color: rgba(51, 65, 85, 0.86) !important;
+            font-size: 0.93rem;
+            line-height: 1.6;
+        }
+
+        .if-auth-divider {
+            width: min(520px, 82%);
+            height: 1px;
+            margin: 0.75rem auto 0.7rem;
+            background: linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0));
+        }
+
+        .if-auth-footer-note {
+            color: rgba(100, 116, 139, 0.84) !important;
+            font-size: 0.84rem;
         }
 
         .if-hero {
@@ -1996,6 +2442,11 @@ def apply_futuristic_theme():
                 padding-left: 1rem;
             }
 
+            .main .block-container:has(.if-auth-screen) {
+                max-width: 860px;
+                min-height: auto;
+            }
+
             .if-cap-grid {
                 grid-template-columns: 1fr;
             }
@@ -2043,6 +2494,78 @@ def apply_futuristic_theme():
 
             .if-user-meta {
                 gap: 6px;
+            }
+
+            .main .block-container:has(.if-auth-screen) {
+                min-height: auto;
+                padding-top: 0.8rem;
+                padding-bottom: 0.8rem;
+            }
+
+            .if-auth-screen {
+                padding-top: 0;
+                margin-bottom: 0.75rem;
+            }
+
+            .if-auth-brand {
+                padding-top: 0;
+            }
+
+            .if-auth-brand::before {
+                inset: 1.6rem 0 auto;
+                height: 150px;
+                border-radius: 22px;
+            }
+
+            .if-auth-logo {
+                width: 74px;
+                height: 74px;
+                border-radius: 20px;
+            }
+
+            .if-auth-title {
+                font-size: 2.35rem;
+            }
+
+            .if-auth-copy {
+                font-size: 0.92rem;
+            }
+
+            .if-auth-highlights {
+                gap: 0.5rem;
+            }
+
+            .if-auth-highlight {
+                width: 100%;
+                justify-content: center;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) {
+                max-width: 100%;
+                padding: 1rem;
+                border-radius: 20px;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] [role="tablist"],
+            div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) .stTabs [data-baseweb="tab-list"] {
+                width: 100%;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stTabs"] [role="tabpanel"] {
+                max-width: 100%;
+                padding: 0.95rem 0.85rem 0.85rem;
+            }
+
+            .if-auth-card-title {
+                font-size: 1.2rem;
+            }
+
+            .if-auth-panel-title {
+                font-size: 1.22rem;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-auth-card-marker)) [data-testid="stForm"] {
+                max-width: 100%;
             }
 
             .if-hero-gem {
@@ -3060,10 +3583,24 @@ def init_state():
         st.session_state.backend_started_at = None
     if "backend_autostart_attempted" not in st.session_state:
         st.session_state.backend_autostart_attempted = False
+    if "backend_ok" not in st.session_state:
+        st.session_state.backend_ok = False
+    if "backend_status" not in st.session_state:
+        st.session_state.backend_status = "unchecked"
+    if "backend_health_checked_at" not in st.session_state:
+        st.session_state.backend_health_checked_at = 0.0
+    if "backend_health_base_url" not in st.session_state:
+        st.session_state.backend_health_base_url = ""
     if "erp_url" not in st.session_state:
         st.session_state.erp_url = "http://localhost:8503"
     if "erp_launch_nonce" not in st.session_state:
         st.session_state.erp_launch_nonce = 0
+    if "erp_proc" not in st.session_state:
+        st.session_state.erp_proc = None
+    if "erp_started_at" not in st.session_state:
+        st.session_state.erp_started_at = None
+    if "erp_ready_url" not in st.session_state:
+        st.session_state.erp_ready_url = None
     if "upload_prefer_handwriting_ocr" not in st.session_state:
         st.session_state.upload_prefer_handwriting_ocr = False
     if "process_prefer_handwriting_ocr" not in st.session_state:
@@ -3151,12 +3688,18 @@ def fetch_current_user_profile(token: Optional[str] = None) -> Tuple[Optional[Di
 
 def ensure_authenticated_user() -> bool:
     token = st.session_state.get("auth_token")
-    if not token:
-        return False
     auth_user = st.session_state.get("auth_user")
     if isinstance(auth_user, dict) and auth_user.get("email"):
         return True
+
+    # Support presentation/demo deployments where backend auth is disabled.
     profile, error = fetch_current_user_profile(token)
+    if not token and not error and isinstance(profile, dict) and profile.get("email"):
+        st.session_state.auth_user = profile
+        st.session_state.auth_notice = None
+        return True
+    if not token:
+        return False
     if error:
         clear_auth_state(f"Please sign in again. {error}")
         return False
@@ -3185,6 +3728,18 @@ def authenticate_user(email: str, password: str) -> Optional[str]:
     token = payload.get("access_token")
     if not token:
         return "Login completed, but no access token was returned."
+
+    inline_profile = {
+        "id": payload.get("user_id"),
+        "email": payload.get("email"),
+        "full_name": payload.get("full_name"),
+        "company": payload.get("company"),
+        "role": payload.get("role"),
+        "created_at": payload.get("created_at"),
+    }
+    if inline_profile.get("email") and inline_profile.get("full_name"):
+        set_authenticated_user(token, inline_profile)
+        return None
 
     profile, error = fetch_current_user_profile(token)
     if error:
@@ -3226,38 +3781,234 @@ def register_user(full_name: str, company: str, email: str, password: str, confi
 
 
 def render_auth_gate():
-    st.title("Sign In To invoiceflow")
-    st.caption("Authentication is required before you can access uploads, review, exports, and ERP handoff.")
-    render_section_intro(
-        "Secure Access",
-        "Create an account or sign in before using the invoice workspace.",
-    )
-
-    if st.session_state.get("auth_notice"):
-        st.info(st.session_state.auth_notice)
-
-    info_col, auth_col = st.columns([1.2, 1], gap="large")
-    with info_col:
+    auth_card = st.container()
+    with auth_card:
         st.markdown(
             """
-            <div class="if-card if-reveal">
-              <div class="if-card-title">Protected invoice workspace</div>
-              <p>
-                Authentication now protects uploads, review actions, exports, and ERP handoff data.
-                Sign in to continue, or create a new local account to get started.
-              </p>
+            <style>
+            .main .block-container:has(.if-simple-auth-screen) {
+                max-width: 500px;
+                min-height: calc(100vh - 2.5rem);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+
+            .if-simple-auth-screen {
+                display: none;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) {
+                width: 100%;
+                max-width: 100%;
+                margin: 0 auto;
+                padding: 1.5rem;
+                border-radius: 22px;
+                border: 1px solid rgba(226, 232, 240, 0.92);
+                background: rgba(255, 255, 255, 0.94);
+                box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            }
+
+            .if-simple-auth-head {
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+
+            .if-simple-auth-title {
+                color: var(--text) !important;
+                font-family: "Outfit", sans-serif !important;
+                font-size: 2rem;
+                font-weight: 800;
+                line-height: 1.05;
+                letter-spacing: -0.04em;
+            }
+
+            .if-simple-auth-copy {
+                margin-top: 0.45rem;
+                color: var(--muted) !important;
+                font-size: 0.96rem;
+                line-height: 1.55;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stAlert"] {
+                border-radius: 14px;
+                border: 1px solid rgba(226, 232, 240, 0.92);
+                background: rgba(248, 250, 252, 0.96);
+                box-shadow: none;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTabs"] [role="tablist"],
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTabs [data-baseweb="tab-list"] {
+                margin-bottom: 1rem;
+                gap: 0.5rem;
+                justify-content: center;
+                border: none;
+                background: transparent;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTabs"] button[role="tab"],
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTabs [data-baseweb="tab"] {
+                min-height: 44px;
+                min-width: 140px;
+                border-radius: 999px;
+                border: 1px solid rgba(203, 213, 225, 0.9);
+                background: #ffffff;
+                color: var(--muted) !important;
+                font-weight: 700;
+                box-shadow: none;
+                transition: none;
+                flex: 1 1 0;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTabs"] button[role="tab"]::after,
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTabs [data-baseweb="tab"]::after {
+                display: none;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTabs"] [aria-selected="true"],
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTabs [aria-selected="true"] {
+                color: var(--text) !important;
+                border-color: rgba(148, 163, 184, 0.95);
+                background: rgba(241, 245, 249, 0.96);
+                box-shadow: none;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTabs"] [role="tabpanel"] {
+                padding: 0;
+                border: none;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .if-simple-auth-section {
+                margin-bottom: 0.9rem;
+            }
+
+            .if-simple-auth-section-title {
+                color: var(--text2) !important;
+                font-family: "Outfit", sans-serif !important;
+                font-size: 1.1rem;
+                font-weight: 700;
+                line-height: 1.2;
+            }
+
+            .if-simple-auth-section-copy {
+                margin-top: 0.3rem;
+                color: var(--muted) !important;
+                font-size: 0.9rem;
+                line-height: 1.5;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stForm"] {
+                border: none;
+                background: transparent;
+                padding: 0;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) [data-testid="stTextInput"] {
+                margin-bottom: 0.85rem;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTextInput input {
+                min-height: 48px;
+                border-radius: 12px !important;
+                border: 1px solid rgba(203, 213, 225, 0.95) !important;
+                background: #ffffff !important;
+                box-shadow: none !important;
+                padding-left: 0.9rem !important;
+                color: #0f172a !important;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stTextInput input:focus {
+                border-color: rgba(67, 97, 238, 0.45) !important;
+                box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.12) !important;
+            }
+
+            div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) .stFormSubmitButton > button {
+                min-height: 48px;
+                border-radius: 12px;
+                border: none !important;
+                font-family: "Outfit", sans-serif !important;
+                font-size: 1rem;
+                font-weight: 700;
+                color: #ffffff !important;
+                background: var(--blue) !important;
+                box-shadow: none;
+            }
+
+            .if-simple-auth-note {
+                margin-top: 0.75rem;
+                color: var(--light) !important;
+                font-size: 0.84rem;
+                text-align: center;
+            }
+
+            @media (max-width: 780px) {
+                .main .block-container:has(.if-simple-auth-screen) {
+                    max-width: 100%;
+                    min-height: auto;
+                    padding-top: 0.8rem;
+                    padding-bottom: 0.8rem;
+                }
+
+                div[data-testid="stVerticalBlock"]:has(.if-simple-auth-card-marker):not(:has(div[data-testid="stVerticalBlock"] .if-simple-auth-card-marker)) {
+                    padding: 1rem;
+                    border-radius: 18px;
+                }
+
+                .if-simple-auth-title {
+                    font-size: 1.7rem;
+                }
+            }
+            </style>
+            <div class="if-simple-auth-screen"></div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown('<div class="if-simple-auth-card-marker"></div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="if-simple-auth-head">
+              <div class="if-simple-auth-title">Sign in</div>
+              <div class="if-simple-auth-copy">
+                Access your invoice workspace with a simpler login screen.
+              </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        st.caption("Your session token stays in Streamlit session state for this browser session only.")
+        if st.session_state.get("auth_notice"):
+            st.info(st.session_state.auth_notice)
 
-    with auth_col:
         sign_in_tab, register_tab = st.tabs(["Sign In", "Create Account"])
         with sign_in_tab:
+            st.markdown(
+                """
+                <div class="if-simple-auth-section">
+                  <div class="if-simple-auth-section-title">Welcome back</div>
+                  <div class="if-simple-auth-section-copy">
+                    Enter your email and password to continue.
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             with st.form("login_form"):
-                email = st.text_input("Email", key="login_email")
-                password = st.text_input("Password", type="password", key="login_password")
+                email = st.text_input(
+                    "Email",
+                    key="login_email",
+                    placeholder="you@example.com",
+                )
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    key="login_password",
+                    placeholder="Enter your password",
+                )
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
             if submitted:
                 error = authenticate_user(email, password)
@@ -3267,15 +4018,44 @@ def render_auth_gate():
                     st.rerun()
 
         with register_tab:
+            st.markdown(
+                """
+                <div class="if-simple-auth-section">
+                  <div class="if-simple-auth-section-title">Create an account</div>
+                  <div class="if-simple-auth-section-copy">
+                    Set up your profile and start using the workspace.
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
             with st.form("register_form"):
-                full_name = st.text_input("Full Name", key="register_full_name")
-                company = st.text_input("Company", key="register_company")
-                email = st.text_input("Email", key="register_email")
-                password = st.text_input("Password", type="password", key="register_password")
+                full_name = st.text_input(
+                    "Full Name",
+                    key="register_full_name",
+                    placeholder="Your name",
+                )
+                company = st.text_input(
+                    "Company",
+                    key="register_company",
+                    placeholder="Company name",
+                )
+                email = st.text_input(
+                    "Email",
+                    key="register_email",
+                    placeholder="you@example.com",
+                )
+                password = st.text_input(
+                    "Password",
+                    type="password",
+                    key="register_password",
+                    placeholder="Create a password",
+                )
                 confirm_password = st.text_input(
                     "Confirm Password",
                     type="password",
                     key="register_password_confirm",
+                    placeholder="Re-enter your password",
                 )
                 submitted = st.form_submit_button("Create Account", type="primary", use_container_width=True)
             if submitted:
@@ -3285,6 +4065,14 @@ def render_auth_gate():
                 else:
                     st.success("Account created and signed in.")
                     st.rerun()
+        st.markdown(
+            """
+            <div class="if-simple-auth-note">
+              Session tokens stay limited to this browser session.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def render_session_bar():
@@ -3332,30 +4120,29 @@ def port_in_use(host: str, port: int, timeout: float = 0.4) -> bool:
 def backend_usable_without_auth(port: int) -> bool:
     base = f"http://127.0.0.1:{port}"
     try:
-        health = requests.get(f"{base}/health", timeout=1.0)
+        health = requests.get(f"{base}/health", timeout=0.35)
         return health.status_code == 200
     except RequestException:
         return False
 
 
 def select_backend_port() -> int:
+    preferred_ports = [8000, 8001, 8002, 8003, 8010, 8020]
     managed_proc = st.session_state.get("backend_proc")
     if managed_proc is not None and managed_proc.poll() is None:
         managed_port = int(st.session_state.get("backend_port", 8000))
         if backend_usable_without_auth(managed_port):
             return managed_port
 
-    # If 8000 is free, use it.
-    if not port_in_use("127.0.0.1", 8000):
-        return 8000
+    # Reuse an already healthy local backend before launching a new one.
+    for port in preferred_ports:
+        if port_in_use("127.0.0.1", port) and backend_usable_without_auth(port):
+            return port
 
-    # 8000 is occupied by an external process; prefer a dedicated free port
-    # so the UI can launch a backend with the latest local code.
-    for port in [8001, 8002, 8003, 8010, 8020]:
+    for port in preferred_ports:
         if not port_in_use("127.0.0.1", port):
             return port
 
-    # Fallback if all preferred ports are busy.
     return 8000
 
 
@@ -3381,6 +4168,14 @@ def root_url(base_url: str) -> str:
     return base_url[:-4] if base_url.endswith("/api") else base_url
 
 
+def set_backend_health(ok: bool, status: str) -> Tuple[bool, str]:
+    st.session_state.backend_ok = ok
+    st.session_state.backend_status = status
+    st.session_state.backend_health_checked_at = time.time()
+    st.session_state.backend_health_base_url = st.session_state.base_url
+    return ok, status
+
+
 def build_erp_launch_url(invoice_id: Optional[str] = None) -> str:
     params = {"backend_api": st.session_state.base_url}
     if invoice_id:
@@ -3388,14 +4183,135 @@ def build_erp_launch_url(invoice_id: Optional[str] = None) -> str:
     return f"{st.session_state.erp_url.rstrip('/')}?{urlencode(params)}"
 
 
-def check_backend(base_url: str, timeout: float = 10.0) -> Tuple[bool, str]:
+def check_erp_module(base_url: Optional[str] = None, timeout: float = 3.0) -> Tuple[bool, str]:
+    erp_base = (base_url or st.session_state.erp_url).rstrip("/")
+    candidates = [f"{erp_base}/_stcore/health", f"{erp_base}/healthz", erp_base]
+    last_error = "ERP module is offline."
+    for url in candidates:
+        try:
+            res = requests.get(url, timeout=timeout)
+            if res.status_code == 200:
+                return True, "ready"
+            last_error = f"status {res.status_code}"
+        except RequestException as exc:
+            last_error = str(exc)
+    return False, last_error
+
+
+def erp_launch_host_is_local() -> bool:
+    parsed = urlparse(st.session_state.erp_url)
+    return (parsed.hostname or "").lower() in {"127.0.0.1", "localhost", "::1"}
+
+
+def erp_launch_port() -> int:
+    parsed = urlparse(st.session_state.erp_url)
+    if parsed.port is not None:
+        return int(parsed.port)
+    return 443 if parsed.scheme == "https" else 80
+
+
+def start_erp_process() -> Tuple[bool, str]:
+    ready, _ = check_erp_module(timeout=1.0)
+    if ready:
+        return True, "ERP module already running."
+
+    if not erp_launch_host_is_local():
+        return False, f"ERP module is offline at {st.session_state.erp_url}."
+
+    port = erp_launch_port()
+    managed_proc = st.session_state.get("erp_proc")
+    if managed_proc is not None and managed_proc.poll() is None:
+        return True, f"ERP process already starting on port {port}."
+
+    if port_in_use("127.0.0.1", port):
+        return False, f"Port {port} is already in use, but the ERP module is not responding."
+
     try:
-        res = requests.get(f"{root_url(base_url)}/health", timeout=timeout)
+        cmd = [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            "erp_frontend.py",
+            "--server.port",
+            str(port),
+            "--server.headless",
+            "true",
+        ]
+        proc = subprocess.Popen(cmd, cwd=".")
+        st.session_state.erp_proc = proc
+        st.session_state.erp_started_at = time.time()
+        return True, f"ERP module starting on port {port}."
+    except Exception as exc:
+        return False, f"Failed to start ERP module: {exc}"
+
+
+def ensure_erp_module_ready(timeout: float = 25.0) -> Tuple[bool, str]:
+    ready, status = check_erp_module(timeout=1.0)
+    if ready:
+        return True, status
+
+    started, start_status = start_erp_process()
+    if not started:
+        return False, start_status
+
+    last_status = start_status
+    for _ in range(max(1, int(timeout))):
+        time.sleep(1.0)
+        ready, last_status = check_erp_module(timeout=1.5)
+        if ready:
+            return True, "ready"
+
+        managed_proc = st.session_state.get("erp_proc")
+        if managed_proc is not None and managed_proc.poll() is not None:
+            return False, f"ERP module stopped before it became ready (exit code {managed_proc.poll()})."
+
+    return False, f"ERP module did not become ready at {st.session_state.erp_url}. Last status: {last_status}"
+
+
+def open_url_in_browser(url: str, new_tab: bool = True) -> bool:
+    try:
+        if new_tab:
+            return bool(webbrowser.open_new_tab(url))
+        return bool(webbrowser.open(url))
+    except Exception:
+        return False
+
+
+def check_backend(base_url: str, timeout: float = 1.5) -> Tuple[bool, str]:
+    base = root_url(base_url)
+    parsed = urlparse(base)
+    hostname = (parsed.hostname or "").lower()
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+
+    if hostname in {"127.0.0.1", "localhost"} and not port_in_use("127.0.0.1", port, timeout=0.15):
+        return False, f"port {port} is closed"
+
+    try:
+        res = requests.get(f"{base}/health", timeout=timeout)
         if res.status_code == 200:
             return True, "healthy"
         return False, f"status {res.status_code}"
     except RequestException as e:
         return False, str(e)
+
+
+def refresh_backend_health(force: bool = False, timeout: float = 1.5) -> Tuple[bool, str]:
+    now = time.time()
+    cached_base = st.session_state.get("backend_health_base_url")
+    cached_at = float(st.session_state.get("backend_health_checked_at") or 0.0)
+    if (
+        not force
+        and cached_base == st.session_state.base_url
+        and now - cached_at < 2.0
+    ):
+        return (
+            bool(st.session_state.get("backend_ok", False)),
+            str(st.session_state.get("backend_status") or "unknown"),
+        )
+
+    ok, status = check_backend(st.session_state.base_url, timeout=timeout)
+    return set_backend_health(ok, status)
 
 def start_backend_process() -> Tuple[bool, str]:
     try:
@@ -3418,21 +4334,39 @@ def start_backend_process() -> Tuple[bool, str]:
     except Exception as e:
         return False, f"Failed to start backend: {e}"
 
-def auto_start_backend():
+def auto_start_backend(wait_timeout: float = 12.0, poll_interval: float = 0.35) -> Tuple[bool, str]:
     if st.session_state.backend_autostart_attempted:
-        return
+        return (
+            bool(st.session_state.get("backend_ok", False)),
+            str(st.session_state.get("backend_status") or "Startup already attempted."),
+        )
     st.session_state.backend_autostart_attempted = True
-    ok, _ = start_backend_process()
+    ok, start_status = start_backend_process()
     if not ok:
-        return
-    # Wait briefly for the server to come up
-    for _ in range(30):
-        time.sleep(1.0)
-        ok, status = check_backend(st.session_state.base_url, timeout=3.0)
-        if ok:
-            st.session_state.backend_ok = True
-            st.session_state.backend_status = status
-            return
+        return set_backend_health(False, start_status)
+
+    port = int(st.session_state.backend_port)
+    deadline = time.time() + wait_timeout
+    last_status = start_status
+    while time.time() < deadline:
+        managed_proc = st.session_state.get("backend_proc")
+        if managed_proc is not None and managed_proc.poll() is not None:
+            return set_backend_health(
+                False,
+                f"Backend stopped before it became ready (exit code {managed_proc.poll()}).",
+            )
+
+        if port_in_use("127.0.0.1", port, timeout=0.12):
+            ok, last_status = check_backend(st.session_state.base_url, timeout=0.75)
+            if ok:
+                return set_backend_health(True, last_status)
+
+        time.sleep(poll_interval)
+
+    return set_backend_health(
+        False,
+        f"Backend did not become ready within {wait_timeout:.0f}s. Last status: {last_status}",
+    )
 
 
 def post_json(url: str, payload: Optional[dict] = None, use_auth: bool = True, timeout: float = 15.0):
@@ -3888,24 +4822,29 @@ def render_export():
             key="export_format",
             format_func=lambda value: value.upper(),
         )
-    erp_launch_url = build_erp_launch_url(invoice_id or st.session_state.get("active_invoice_id"))
+    target_invoice_id = invoice_id or st.session_state.get("active_invoice_id")
+    erp_launch_url = build_erp_launch_url(target_invoice_id)
 
-    erp_col1, erp_col2 = st.columns([1, 2])
+    erp_col1, erp_col2 = st.columns(2)
     with erp_col1:
         fill_erp_clicked = st.button("Fill in ERP", width='stretch', key="fill_erp_btn")
     with erp_col2:
-        st.caption(
-            f"Run the ERP module separately with: `streamlit run erp_frontend.py --server.port 8503`"
-        )
-        st.link_button("Open ERP Module", erp_launch_url, use_container_width=True)
+        open_erp_clicked = st.button("Open ERP Module", width='stretch', key="open_erp_btn")
+
+    erp_feedback = None
+    erp_feedback_kind = None
+
+    st.caption(
+        "Open ERP Module will start the ERP page automatically on port 8503 if it is not already running."
+    )
 
     if fill_erp_clicked:
-        if not invoice_id:
+        if not target_invoice_id:
             st.warning("Please enter an invoice ID before filling ERP.")
             return
         set_res = post_json(
             f"{st.session_state.base_url}/erp/set_current_invoice",
-            {"invoice_id": invoice_id},
+            {"invoice_id": target_invoice_id},
         )
         if isinstance(set_res, dict) and set_res.get("_error"):
             st.error(f"Backend not reachable: {set_res['_error']}")
@@ -3914,17 +4853,46 @@ def render_export():
         if getattr(set_res, "status_code", None) != 200:
             st.error(set_data)
             return
-        st.success(f"Invoice {invoice_id} sent to ERP.")
+        st.success(f"Invoice {target_invoice_id} sent to ERP.")
         st.session_state.erp_launch_nonce += 1
-        launch_url = json.dumps(build_erp_launch_url(invoice_id))
-        components.html(
-            f"""
-            <script>
-            window.open({launch_url}, "_blank");
-            </script>
-            """,
-            height=0,
-        )
+        ready, status = ensure_erp_module_ready()
+        if not ready:
+            st.error(status)
+            st.caption("Manual fallback: `streamlit run erp_frontend.py --server.port 8503`")
+            return
+        launch_url = build_erp_launch_url(target_invoice_id)
+        st.session_state.erp_ready_url = launch_url
+        opened = open_url_in_browser(launch_url, new_tab=True)
+        if opened:
+            erp_feedback = "ERP module opened in a new browser tab."
+            erp_feedback_kind = "success"
+        else:
+            erp_feedback = "ERP module is ready. Use the link below if your browser did not open it automatically."
+            erp_feedback_kind = "info"
+
+    if open_erp_clicked:
+        ready, status = ensure_erp_module_ready()
+        if not ready:
+            st.error(status)
+            st.caption("Manual fallback: `streamlit run erp_frontend.py --server.port 8503`")
+            return
+        st.session_state.erp_ready_url = erp_launch_url
+        opened = open_url_in_browser(erp_launch_url, new_tab=True)
+        if opened:
+            erp_feedback = "ERP module opened in a new browser tab."
+            erp_feedback_kind = "success"
+        else:
+            erp_feedback = "ERP module is ready. Use the link below if your browser did not open it automatically."
+            erp_feedback_kind = "info"
+
+    if erp_feedback_kind == "success":
+        st.success(erp_feedback)
+    elif erp_feedback_kind == "info":
+        st.info(erp_feedback)
+
+    ready_launch_url = st.session_state.get("erp_ready_url")
+    if ready_launch_url:
+        st.link_button("Open ERP Page", ready_launch_url, use_container_width=True)
 
     if st.button("Generate Export", width='stretch', type="primary", key="export_btn"):
         if not invoice_id:
@@ -3992,6 +4960,7 @@ def render_history():
             st.session_state.history = data if isinstance(data, list) else []
         else:
             st.error(data)
+            
             return
 
     history = st.session_state.history or []
@@ -4042,14 +5011,9 @@ def main():
     apply_futuristic_theme()
     render_live_background()
 
-    backend_ok, backend_status = check_backend(st.session_state.base_url)
-    st.session_state.backend_ok = backend_ok
-    st.session_state.backend_status = backend_status
+    backend_ok, backend_status = refresh_backend_health(force=True)
     if not backend_ok:
-        auto_start_backend()
-        backend_ok, backend_status = check_backend(st.session_state.base_url)
-        st.session_state.backend_ok = backend_ok
-        st.session_state.backend_status = backend_status
+        backend_ok, backend_status = auto_start_backend()
 
     if not st.session_state.get("backend_ok", False):
         inject_motion_runtime()

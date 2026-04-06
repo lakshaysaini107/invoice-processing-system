@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: invoiceflow-demo
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: DEBUG
+        value: "false"
+      - key: ENVIRONMENT
+        value: "production"
+      - key: AUTH_DISABLED
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MYSQL_URL
+        sync: false

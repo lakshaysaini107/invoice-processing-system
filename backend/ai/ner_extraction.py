@@ -1,8 +1,8 @@
-import spacy
 import re
 from typing import Dict, Any, List
 from backend.core.logging import logger
 from backend.utils.regex_utils import REGEX_PATTERNS
+
 
 class NEREngine:
     """Extract named entities (vendors, amounts, dates) using NLP"""
@@ -10,9 +10,14 @@ class NEREngine:
     def __init__(self):
         # Load spaCy model for NER
         try:
+            import spacy
+
             self.nlp = spacy.load("en_core_web_sm")
-        except:
-            logger.warning("Spacy model not found. Download with: python -m spacy download en_core_web_sm")
+        except Exception:
+            logger.warning(
+                "spaCy runtime or model not found. Install spaCy and "
+                "download en_core_web_sm to enable NLP-based NER."
+            )
             self.nlp = None
 
     async def extract_entities(

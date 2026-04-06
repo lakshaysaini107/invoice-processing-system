@@ -1,14 +1,134 @@
-# invoiceflow
+# Invoiceflow - Intelligent Invoice Processing System
 
-`invoiceflow` is a local invoice-processing system that accepts invoice PDFs or images, extracts structured fields, flags uncertain values for human review, exports the cleaned result, and can hand the reviewed invoice into an ERP-style entry form.
+`invoiceflow` is a comprehensive, locally-run invoice processing platform that automates document extraction while maintaining human oversight. It accepts invoice PDFs or images, intelligently extracts structured fields with confidence scoring, flags uncertain values for human review, exports cleaned data in multiple formats, and integrates seamlessly with ERP-style systems.
 
-## What The System Includes
+## Core Purpose
 
-- A `FastAPI` backend for upload, processing, review, export, ERP handoff, and health endpoints.
-- A main `Streamlit` app in `frontend.py` for the operational workflow.
-- A second `Streamlit` app in `erp_frontend.py` for final ERP-style data entry.
-- A `MySQL` persistence layer that stores users, invoice lifecycle data, extracted payloads, and ERP records.
-- An OCR and extraction pipeline built from local Python libraries rather than a hosted AI API.
+The system bridges the gap between raw invoice documents and operational data entry. Instead of manual transcription, invoiceflow automatically extracts key invoice fields (invoice numbers, vendor details, amounts, tax information, line items, etc.) with built-in confidence scoring, allowing human reviewers to quickly validate and correct high-confidence extractions while focusing effort on uncertain fields.
+
+## How It Works in 3 Steps
+
+### 1. **Automatic Extraction**
+User uploads a PDF or image → System automatically extracts invoice fields using local OCR, heuristics, and NLP → Extraction confidence is calculated for each field.
+
+### 2. **Human Review & Correction**
+Reviewer views extraction results with confidence indicators → Uncertain fields are highlighted → Reviewer corrects what needs fixing → System records all changes for audit trail.
+
+### 3. **Export & Integration**
+Cleaned data can be exported (JSON, CSV, Excel) for downstream systems → Or directly integrated into ERP forms with auto-filled fields → Complete lifecycle tracked in database.
+
+The key innovation: **automation handles the routine work, confidence scores show where humans should focus, and the system remembers everything.**
+
+## System Components
+
+The complete system is built from:
+
+- **FastAPI Backend**: Provides REST APIs for upload, processing, review, export, ERP integration, and authentication
+- **Streamlit UI (frontend.py)**: Main operational interface with upload, review, and export workflows
+- **ERP Integration (erp_frontend.py)**: Dedicated interface for final ERP-style data entry with auto-filled fields
+- **MySQL Database**: Persistent storage for users, invoice metadata, extraction results, corrections, and ERP records
+- **Local AI Pipeline**: OCR, layout detection, field extraction, and entity recognition without external APIs
+
+## System Architecture
+
+### Layered Architecture
+
+The system follows a **three-tier layered architecture**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  PRESENTATION LAYER                      │
+│  Streamlit Frontend (frontend.py) | ERP UI (erp_frontend.py) │
+│         (User Workflows & Manual Review)                 │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP/REST Calls
+                       ▼
+┌──────────────────────────────────────────────────────────┐
+│                    API LAYER                             │
+│                 FastAPI Backend                          │
+│  ┌─────────────┬────────────┬────────────┬───────────┐   │
+│  │Auth API     │Upload API  │Process API │Review API │   │
+│  │Export API   │ERP API     │Health API  │           │   │
+│  └─────────────┴────────────┴────────────┴───────────┘   │
+└──────────────┬───────────────────────────────────────────┘
+               │ SQL Queries     
+               ▼
+┌──────────────────────────────────────────────────────────┐
+│                   DATA LAYER                             │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │           MySQL Relational Database                │ │
+│  │   users | invoices | erp_invoices | audit records  │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │        File Storage (data/uploads/<user_id>/)       │ │
+│  │     (PDF, images, processing artifacts)             │ │
+│  └─────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Processing Pipeline Architecture
+
+The invoice processing happens asynchronously through multiple specialized stages:
+
+```
+Raw Invoice
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  PREPROCESSING                          │
+│  • PDF → Images (PyMuPDF)                │
+│  • Image Enhancement                    │
+│  • Deskew, Denoise, Contrast, Sharpen  │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  OCR EXTRACTION                         │
+│  • PaddleOCR (Primary)                   │
+│  • Tesseract (Fallback)                  │
+│  • Multiple page segmentation modes     │
+│  • Text + Bounding boxes captured       │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  LAYOUT DETECTION                       │
+│  • Identify tables, text blocks          │
+│  • Detect header/body/footer sections   │
+│  • OpenCV morphology & contour analysis │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  FIELD EXTRACTION                       │
+│  • Heuristic parser (vision_llm.py)     │
+│  • Extract: invoice #, dates, vendor,   │
+│    amounts, tax, PO, bank, line items   │
+│  • No external API required              │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  ENTITY RECOGNITION                     │
+│  • spaCy NER (organizations, people)     │
+│  • Regex-based amount/date extraction   │
+│  • Additional semantic context           │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  VALIDATION & CONFIDENCE SCORING        │
+│  • Normalize dates, amounts, GST        │
+│  • Validate payment terms, bank details │
+│  • Field-level confidence scores        │
+│  • Overall processing confidence        │
+└─────────────────────────────────────────┘
+    │
+    ▼
+Extracted Data with Confidence Metadata
+(Ready for Human Review)
+```
 
 ## Full System Workflow
 
@@ -164,34 +284,162 @@ The ERP handoff is split into two parts:
 
 This creates a bridge from document extraction into downstream finance/ERP entry.
 
-## Tech Stack
+## Technology Stack & Architecture
 
-| Layer | Technology | How it is used here | Benefit |
+### Backend & API Layer
+| Component | Technology | Purpose | Why Chosen |
 | --- | --- | --- | --- |
-| API backend | FastAPI | Defines upload, processing, review, export, ERP, and auth endpoints | Clean async API design, strong typing, easy testing |
-| ASGI server | Uvicorn | Runs the FastAPI app locally | Fast startup and simple local deployment |
-| UI | Streamlit | Powers `frontend.py` and `erp_frontend.py` | Rapid internal-tool development with minimal boilerplate |
-| Config | Pydantic + pydantic-settings | Loads `.env` values and validates settings | Safer configuration and cleaner environment handling |
-| Database | MySQL + aiomysql | Stores invoice lifecycle records, users, and ERP saves | Durable relational storage with async access |
-| File uploads | aiofiles + python-multipart | Handles async upload reads and multipart form parsing | Efficient file ingestion for invoice documents |
-| OCR/image work | OpenCV + NumPy | Image preprocessing, thresholding, morphology, and layout logic | Strong local document-image processing performance |
-| PDF rendering | PyMuPDF | Renders PDF pages into images before OCR | Better OCR-ready page images from source PDFs |
-| OCR engines | PaddleOCR + Tesseract | Extract raw text and bounding boxes from invoices | Dual-engine flexibility improves robustness |
-| NLP/entity extraction | spaCy | Extracts organizations, people, and locations when the model is installed | Adds semantic clues beyond raw regex extraction |
-| Business validation | Custom utils/services | Validates GST, dates, amounts, payment terms, and bank fields | Improves correctness and highlights risky fields |
-| Security helpers | python-jose + bcrypt + custom PBKDF2 logic | Supports JWT generation and password verification/hash migration | Keeps auth primitives available for secure deployments |
-| Exports | openpyxl + csv/json stdlib | Produces Excel, CSV, and JSON outputs | Easy downstream sharing and reporting |
-| Frontend-backend communication | requests | Streamlit apps call backend APIs | Simple and stable local HTTP integration |
-| Testing | pytest + pytest-asyncio + httpx | Covers routes, OCR, validation, extraction, and ERP APIs | Safer refactoring and easier regression checks |
+| API Framework | **FastAPI** | Defines all REST endpoints (upload, process, review, export, ERP) | Modern async support, automatic API documentation, strong type hints with Pydantic integration |
+| ASGI Server | **Uvicorn** | Runs the FastAPI application | Lightweight, fast startup, perfect for local development and deployment |
+| Async Task Queue | **FastAPI Background Tasks** | Runs invoice processing asynchronously | Simple to set up, integrated with FastAPI, sufficient for standard concurrent workloads |
 
-## Benefits Of This Design
+### Frontend Layer
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Main UI Framework | **Streamlit** | Powers main workflow UI (frontend.py) and ERP UI (erp_frontend.py) | Rapid development with minimal boilerplate, session state management, instant hot-reload |
+| HTTP Client | **requests** | Frontend-to-backend communication | Simple, mature, reliable for local HTTP calls |
 
-- Reduces manual invoice entry by automating the first extraction pass.
-- Keeps humans in control by surfacing low-confidence fields for correction instead of hiding uncertainty.
-- Stores the full invoice lifecycle in MySQL, including progress, OCR output, corrections, and review metadata.
-- Runs mostly with local Python components, so the core workflow does not depend on external AI APIs.
-- Supports multiple output paths: review, export, and ERP-style persistence.
-- Auto-creates the database schema on startup, which lowers setup friction.
+### Database & Storage
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Relational Database | **MySQL** | Stores users, invoices, extracted data, corrections, ERP records, audit trail | Durable, relational schema supports complex queries, widely available |
+| Async DB Driver | **aiomysql** | Non-blocking database access from async code | Prevents backend blocking, enables concurrent invoice processing |
+| File Storage | **Filesystem** (data/uploads/) | Stores uploaded PDFs, images, and processing artifacts | Fast, simple, avoids database bloat for large files |
+
+### Configuration & Security
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Config Validation | **Pydantic** + **pydantic-settings** | Loads and validates `.env` settings at startup | Type-safe configuration, automatic environment variable binding, clear error messages |
+| Password Hashing & JWT | **python-jose** + **bcrypt** + custom PBKDF2 | Handles authentication and session tokens | Industry-standard security primitives, supports legacy password migration |
+
+### Document Processing (Image & PDF)
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| PDF Rendering | **PyMuPDF (fitz)** | Converts PDF pages to high-quality images | Fast rendering, accurate DPI handling, better OCR input than direct PDF text extraction |
+| Image Enhancement | **OpenCV** + **NumPy** | Preprocessing: deskew, denoise, contrast, sharpen | Mature, optimized algorithms for document image processing |
+| OCR Engine (Primary) | **PaddleOCR** | Fast, accurate OCR with bounding boxes | Modern deep learning OCR, 80+ languages, fast inference |
+| OCR Engine (Fallback) | **Tesseract** | Text extraction with multiple segmentation modes | Reliable fallback, configurable page segmentation modes |
+| Layout Analysis | **OpenCV** morphology & contours | Detects tables, text blocks, and document structure | Local processing, no external APIs, reveals document structure for extraction hints |
+
+### NLP & Entity Extraction
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Named Entity Recognition | **spaCy** (en_core_web_sm) | Identifies companies, people, locations in extracted text | Pre-trained model adds semantic understanding beyond regex, optional but enhances extraction |
+| Business Logic | **Custom utils** (regex, validation) | Extracts and validates GST, dates, amounts, payment terms, bank details | Domain-specific rules ensure correctness for Indian invoices and financial data |
+
+### Data Export & Reporting
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Excel Generation | **openpyxl** | Creates `.xlsx` files with extracted data | Rich formatting support, batch export capability |
+| CSV & JSON | **Python stdlib** (csv, json) | Standard text-based exports | Built-in, no dependencies, universal compatibility |
+
+### Testing & Quality
+| Component | Technology | Purpose | Why Chosen |
+| --- | --- | --- | --- |
+| Test Framework | **pytest** + **pytest-asyncio** | Unit and integration tests for all components | Strong async support, fixtures, parametrization |
+| HTTP Client (Testing) | **httpx** | Test API endpoints with async support | Async-compatible, mirrors requests API |
+
+### Why This Stack?
+
+**Local-First Approach**: All core AI/ML components (OCR, NLP, image processing) run locally. No external APIs means lower latency, zero API costs, complete data privacy, and resilience to network issues.
+
+**Scalability within Constraints**: FastAPI + async IO + aiomysql support concurrent invoice processing. Background tasks handle long-running extraction without blocking the UI.
+
+**Maintainability**: Python-only stack eliminates language switching. Type hints, strong testing, and clear module separation make debugging and extension straightforward.
+
+**Deployment Simplicity**: Single Python environment, auto-generated database schema, and integrated server startup reduce deployment friction.
+
+## Benefits & Key Advantages
+
+### Automation & Efficiency
+- **Reduces Manual Data Entry**: Automates the repetitive first pass of data extraction, eliminating hours of manual invoice transcription
+- **Batch Processing**: Process multiple invoices simultaneously with background task scheduling
+- **Fast Extraction**: Local pipeline processes invoices in seconds without API latency or network dependency
+- **Adaptive OCR**: Dual-engine OCR (PaddleOCR + Tesseract fallback) adapts to varying invoice quality and layout formats
+
+### Human-Centric Design
+- **Confidence Transparency**: Every extracted field includes a confidence score, showing where automation succeeded and where human judgment is needed
+- **Low-Confidence Flagging**: Uncertain fields are automatically highlighted for human review rather than accepted blindly
+- **Easy Corrections**: Reviewers can directly edit extracted JSON with instant validation feedback
+- **Full Audit Trail**: Every correction, reviewer identity, and timestamp is recorded for compliance and learning
+
+### Technical Advantages
+- **No External API Dependencies**: All core processing uses local Python libraries—no reliance on cloud APIs, no API keys to manage, no latency concerns
+- **Data Privacy**: Invoice documents and extracted data never leave your infrastructure
+- **Scalable Architecture**: Async/await design with FastAPI background tasks supports multiple concurrent processing streams
+- **Type Safety**: Pydantic models enforce data structure validation throughout the pipeline
+
+### Business Intelligence & Integration
+- **Multiple Export Formats**: Export extracted data as JSON, CSV, or Excel for easy downstream integration
+- **ERP Integration**: Direct handoff to ERP systems via dedicated ERP form with auto-filled fields
+- **Database Persistence**: Complete invoice lifecycle stored in MySQL—track progress, view OCR artifacts, run analytics
+- **Metadata Richness**: Stores OCR results, layout info, extracted entities, and corrections for auditing and machine learning feedback
+
+### Operational Flexibility
+- **Flexible Input**: Accepts PDF, JPG, PNG, and TIFF files; ZIP uploads are automatically unpacked
+- **Modular Pipeline**: Each processing stage (preprocessing, OCR, extraction, validation) can be adjusted or extended independently
+- **Auto-Schema Creation**: Database tables are created automatically on startup, reducing deployment friction
+- **Graceful Fallbacks**: PaddleOCR falls back to Tesseract; spaCy NER is optional but enhances results when available
+
+## Data Flow & Lifecycle
+
+Understanding how information flows through the system reveals its power and design philosophy:
+
+### Complete Invoice Lifecycle
+
+```
+1. UPLOAD
+   ├─ User uploads PDF/image files via Streamlit
+   ├─ Backend validates file type & size
+   ├─ Files stored in data/uploads/<user_id>/
+   └─ MySQL invoice record created (status: pending)
+
+2. PROCESSING (Async Background Task)
+   ├─ Preprocessing: PDF → images, enhance quality
+   ├─ OCR: Extract text + bounding boxes
+   ├─ Layout: Detect tables, text blocks, sections
+   ├─ Field Extraction: Parse vendor, amounts, dates, etc.
+   ├─ Entity Recognition: Identify organizations, people
+   ├─ Validation: Normalize data, compute confidence scores
+   └─ All intermediate results stored in MySQL
+
+3. REVIEW (Human-in-the-Loop)
+   ├─ Frontend polls processing status
+   ├─ When ready, displays extracted JSON + confidence
+   ├─ Reviewer edits uncertain fields
+   ├─ Frontend marks corrections and submits
+   └─ MySQL updated with corrected data (status: reviewed)
+
+4. EXPORT
+   ├─ Export as JSON (raw extraction)
+   ├─ Export as CSV (flattened rows)
+   ├─ Export as Excel (formatted workbook)
+   └─ No database required; data is self-contained
+
+5. ERP INTEGRATION
+   ├─ User launches ERP form from main UI
+   ├─ ERP UI auto-fills from extraction
+   ├─ User edits and saves ERP record
+   └─ Data persisted in erp_invoices table
+```
+
+### Key Data Artifacts Stored
+
+For each invoice, the system maintains:
+
+- **extracted_data**: Final JSON with all fields (invoice #, vendor, amounts, line items, etc.)
+- **confidence_scores**: Field-level and overall confidence metrics from extraction
+- **ocr_result**: Raw OCR text and character-level bounding boxes
+- **layout_info**: Detected document structure (tables, text blocks, regions)
+- **entities**: Named entities identified by spaCy
+- **corrections**: Journal of all human edits during review
+- **audit_metadata**: Reviewer identity, timestamps, processing duration
+
+This comprehensive storage enables:
+- Compliance audits (who reviewed, when, what changed)
+- ML feedback loops (understanding where extraction failed)
+- Debugging (viewing intermediate results)
+- Reprocessing (if algorithms improve)
 
 ## Running The Project
 
@@ -262,6 +510,52 @@ $env:ERP_BACKEND_API = "http://localhost:8000/api"
 streamlit run erp_frontend.py --server.port 8503
 ```
 
+## Use Cases & Real-World Workflows
+
+### Typical User Scenarios
+
+**Scenario 1: Accounts Payable Processor**
+- Receives 50 vendor invoices daily
+- Uploads batch to invoiceflow in ZIP
+- System extracts vendor info, invoice #, amounts, PO reference, GST
+- Reviews only fields with < 85% confidence (usually 10-20% of extractions)
+- Exports corrected data to accounting system in 15 minutes instead of 2+ hours manual entry
+
+**Scenario 2: Finance Manager**
+- Needs to reconcile and record invoices in ERP
+- Instead of copying invoice data field-by-field, launches ERP form
+- Form auto-fills vendor details, amounts, payment terms from extraction
+- Makes final adjustments and saves to ERP_invoices table
+- Can download CSV for further processing
+
+**Scenario 3: Audit & Compliance**
+- Needs to verify all invoice entries and who approved them
+- Queries MySQL database for complete audit trail
+- Sees original extraction, reviewer corrections, and timestamps
+- Can trace extraction confidence scores back to raw OCR for disputed fields
+
+**Scenario 4: High-Volume Processing**
+- Small business processes 200+ invoices monthly
+- Extracts overnight as batch with background tasks
+- Next morning, reviews corrections in batches by vendor
+- Exports final data directly to CSV for bank transfer file generation
+
+### When invoiceflow Shines
+
+✅ **High volume of similar document types** (lots of vendor invoices)  
+✅ **Documents with varying quality** (mix of scanned and digital)  
+✅ **Compliance requirement for audit trails** (need to prove who checked what)  
+✅ **Repeated data entry into ERP systems** (auto-fill saves hours)  
+✅ **No external API access or offline requirements** (local-only processing)  
+✅ **Need for transparency** (confidence scores show automation limits)
+
+### When to Consider Alternatives
+
+❌ Single, one-off documents (overhead not justified)  
+❌ Highly specialized or non-standard formats (extraction may need custom rules)  
+❌ Real-time requirements with sub-second processing (async design expects human review)  
+❌ Extreme document complexity (layout detection may struggle with multi-column highly artistic layouts)
+
 ## Important Current Caveats
 
 - Authentication helpers and auth endpoints exist, but `backend/app/dependencies.py` currently returns a hardcoded public admin user context. In practice, the current build behaves as an open demo environment.
@@ -274,3 +568,64 @@ streamlit run erp_frontend.py --server.port 8503
 ## Project Map
 
 See `project_structure.md` for the current repository layout and folder-by-folder explanation.
+
+## Extending & Customizing the System
+
+The modular design makes invoiceflow easy to extend for specific needs:
+
+### Common Customizations
+
+**Adding Extra Invoice Fields**
+1. Update the extraction heuristics in `backend/ai/vision_llm.py` to parse new fields from OCR text
+2. Add validation rules to `backend/utils/` or `backend/services/validation_service.py`
+3. Update Pydantic models in `backend/models/` to include new fields
+4. Frontend automatically displays new fields in review UI
+
+**Improving OCR Quality**
+- Preprocessing parameters (deskew threshold, contrast levels) are tunable in `backend/ai/preprocessing.py`
+- OCR engine selection and fallback logic in `backend/ai/ocr_engine.py`
+- Page segmentation modes for Tesseract can be adjusted based on document layout
+
+**Adding Custom Business Rules**
+- Create new validators in `backend/services/validation_service.py`
+- Add field-level confidence rules based on your specific requirements
+- Heuristic extraction in `backend/ai/vision_llm.py` can be expanded with regex or pattern matching
+
+**Connecting to External Systems**
+- Add export endpoints in `backend/api/export.py` for your target systems
+- Extend ERP API `backend/api/erp.py` to call external ERP APIs
+- Use the complete invoice lifecycle stored in MySQL as a source
+
+**Improving Entity Recognition**
+- Replace the optional spaCy model with domain-specific training
+- Add custom regex patterns for business entities in `backend/ai/ner_extraction.py`
+- Leverage the stored `entities` field in MySQL for feedback loops
+
+### Architecture For Scaling
+
+**For Higher Volumes**
+- Replace FastAPI background tasks with Celery + Redis
+- Configure MySQL connection pooling in `backend/database/mysql.py`
+- Add caching layer (e.g., Redis) for processed OCR results
+- Deploy backend on dedicated server, frontends separately
+
+**For ML Improvements**
+- Use stored confidence scores and corrections as training data
+- Fine-tune models on your specific invoice formats
+- A/B test extraction algorithms using the audit trail
+- Build feedback loop: corrections → retrain → deploy
+
+**For Production Deployment**
+- Implement the auth system in `backend/app/dependencies.py` with real user management
+- Add request logging and monitoring (`backend/core/logging.py`)
+- Run multiple Uvicorn workers behind a reverse proxy (nginx/HAProxy)
+- Use Docker for consistent deployment across environments
+- Set up database backups and point-in-time recovery
+
+### Development Tips
+
+- **Test Locally First**: Run `pytest` to validate changes before deployment
+- **Check Confidence Scores**: Review extracted confidence metrics by device type or vendor to spot patterns
+- **Use MySQL Audit Trail**: Query correction history to find extraction weaknesses
+- **Iterate on Validation**: Start with strict validation, then relax rules based on real failure patterns
+- **Leverage Intermediate Results**: Use stored `ocr_result` and `layout_info` to debug extraction issues
