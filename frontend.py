@@ -94,88 +94,13 @@ def apply_futuristic_theme():
             overflow: hidden;
         }
 
-        .if-aurora {
-            position: absolute;
-            border-radius: 999px;
-            filter: blur(70px);
-            opacity: 0.36;
-            mix-blend-mode: multiply;
-            will-change: transform;
-        }
+        
 
-        .if-aurora.a1 {
-            width: 42vmax;
-            height: 42vmax;
-            left: -10vmax;
-            top: -14vmax;
-            background: radial-gradient(circle at 30% 30%, rgba(245, 158, 11, 0.75), rgba(245, 158, 11, 0) 70%);
-            animation: ifFloatA 20s ease-in-out infinite alternate;
-        }
-
-        .if-aurora.a2 {
-            width: 36vmax;
-            height: 36vmax;
-            right: -9vmax;
-            top: 12vh;
-            background: radial-gradient(circle at 55% 45%, rgba(45, 212, 191, 0.72), rgba(45, 212, 191, 0) 70%);
-            animation: ifFloatB 24s ease-in-out infinite alternate;
-        }
-
-        .if-aurora.a3 {
-            width: 34vmax;
-            height: 34vmax;
-            left: 22vw;
-            bottom: -14vmax;
-            background: radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.7), rgba(251, 113, 133, 0) 70%);
-            animation: ifFloatC 22s ease-in-out infinite alternate;
-        }
-
-        .if-aurora.a4 {
-            width: 28vmax;
-            height: 28vmax;
-            left: 46vw;
-            top: 16vh;
-            background: radial-gradient(circle at 50% 50%, rgba(244, 114, 182, 0.46), rgba(244, 114, 182, 0) 70%);
-            animation: ifFloatB 18s ease-in-out infinite alternate-reverse;
-        }
-
-        .if-grid-fog {
-            position: absolute;
-            inset: -8%;
-            background-image:
-                linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
-            background-size: 72px 72px;
-            mask-image: radial-gradient(circle at 50% 32%, rgba(0, 0, 0, 0.7), transparent 72%);
-            opacity: 0.28;
-            animation: ifGridDrift 24s linear infinite;
-        }
-
-        @keyframes ifFloatA {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            100% { transform: translate3d(9vmax, 6vmax, 0) scale(1.12); }
-        }
-
-        @keyframes ifFloatB {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            100% { transform: translate3d(-8vmax, -5vmax, 0) scale(1.1); }
-        }
-
-        @keyframes ifFloatC {
-            0% { transform: translate3d(0, 0, 0) scale(1); }
-            100% { transform: translate3d(5vmax, -7vmax, 0) scale(1.08); }
-        }
-
-        @keyframes ifGridDrift {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-72px, -72px, 0); }
-        }
-
-        @keyframes ifBgShift {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
-        }
-
+        
+        
+        
+        
+        
         @keyframes ifPageFadeIn {
             0% {
                 opacity: 0;
@@ -209,133 +134,66 @@ def apply_futuristic_theme():
             }
         }
 
-        @keyframes ifStatusPulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.18);
-            }
-            50% {
+                    50% {
                 box-shadow: 0 0 0 8px rgba(6, 214, 160, 0);
             }
         }
 
-        @keyframes ifDotPulse {
-            0%, 100% {
-                opacity: 0.72;
-                transform: scale(0.92);
-            }
-            50% {
+                    50% {
                 opacity: 1;
                 transform: scale(1.08);
             }
         }
 
-        @keyframes ifLogoOrbit {
-            0%, 100% {
-                transform: rotate(-2deg) translateY(0);
-            }
-            50% {
+                    50% {
                 transform: rotate(2deg) translateY(-2px);
             }
         }
 
-        @keyframes ifHeroFloat {
-            0%, 100% {
-                transform: translate3d(0, -6px, 0);
-            }
-            50% {
+                    50% {
                 transform: translate3d(0, 6px, 0);
             }
         }
 
-        @keyframes ifBadgeWave {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
+                    50% {
                 transform: translateY(-2px);
             }
         }
 
-        @keyframes ifGradientFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes ifBorderFlow {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
-
-        @keyframes ifSlideInBottom {
-            0% {
-                opacity: 0;
-                transform: translate3d(0, 20px, 0);
-            }
-            100% {
+        
+        
+                    100% {
                 opacity: 1;
                 transform: translate3d(0, 0, 0);
             }
         }
 
-        @keyframes ifTabSlideX {
-            0% {
-                opacity: 0;
-                transform: translate3d(14px, 0, 0);
-            }
-            100% {
+                    100% {
                 opacity: 1;
                 transform: translate3d(0, 0, 0);
             }
         }
 
-        @keyframes ifShimmer {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
-
-        @keyframes ifDropPulse {
-            0%, 100% {
-                box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.18);
-            }
-            50% {
+        
+                    50% {
                 box-shadow: 0 0 0 14px rgba(67, 97, 238, 0);
             }
         }
 
-        @keyframes ifRipple {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0.55;
-            }
-            100% {
+                    100% {
                 transform: translate(-50%, -50%) scale(2.8);
                 opacity: 0;
             }
         }
 
-        @keyframes ifDropRipple {
-            0% {
-                transform: translate(-50%, -50%) scale(0.2);
-                opacity: 0.6;
-            }
-            100% {
+                    100% {
                 transform: translate(-50%, -50%) scale(2.4);
                 opacity: 0;
             }
         }
 
-        @keyframes ifCapDocBob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-2px); }
-        }
-
-        @keyframes ifCapScan {
-            0% {
-                transform: translateY(0);
-                opacity: 0.3;
-            }
-            50% {
+        
+                    50% {
                 opacity: 0.95;
             }
             100% {
@@ -344,57 +202,20 @@ def apply_futuristic_theme():
             }
         }
 
-        @keyframes ifCapFileSlide {
-            0%, 100% { transform: translateX(0); }
-            50% { transform: translateX(3px); }
-        }
-
-        @keyframes ifCapProgress {
-            0% { transform: scaleX(0.15); }
-            70%, 100% { transform: scaleX(1); }
-        }
-
-        @keyframes ifCapReviewPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        @keyframes ifCapCheckPulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.22);
-            }
-            50% {
+        
+        
+        
+                    50% {
                 transform: scale(1.08);
                 box-shadow: 0 0 0 7px rgba(34, 197, 94, 0);
             }
         }
 
-        @keyframes ifCapCorePop {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.06) rotate(3deg); }
-        }
-
-        @keyframes ifCapChipFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-
-        @keyframes ifCapChipFloatCenter {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-4px); }
-        }
-
-        @keyframes ifCapBarPulse {
-            0%, 100% { transform: scaleY(0.92); }
-            50% { transform: scaleY(1.08); }
-        }
-
-        @keyframes ifCapShieldPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.07); }
-        }
-
+        
+        
+        
+        
+        
         [data-testid="stHeader"] {
             background: var(--glass2);
             border-bottom: 1px solid var(--border2);
@@ -416,23 +237,7 @@ def apply_futuristic_theme():
             padding-bottom: 2.2rem;
         }
 
-        .if-side-rail {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 78px;
-            height: 100vh;
-            padding: 18px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            background: var(--glass2);
-            border-right: 1px solid var(--border2);
-            backdrop-filter: blur(28px);
-            z-index: 15;
-            box-shadow: 3px 0 20px rgba(67, 97, 238, 0.05);
-        }
+        
 
         .if-rail-logo {
             margin-bottom: 16px;
@@ -712,81 +517,21 @@ def apply_futuristic_theme():
             transform: scale(1.08);
         }
 
-        .if-user-strip {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            border: 1px solid var(--border2);
-            border-radius: 20px;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(240, 244, 255, 0.68));
-            box-shadow: 0 12px 28px rgba(67, 97, 238, 0.10);
-            padding: 0.9rem 1rem;
-            margin-bottom: 0.9rem;
-            animation: ifNavDrop 0.6s ease both;
-        }
+        
 
-        .if-user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, var(--blue), var(--indigo) 55%, var(--violet));
-            color: #fff !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: "Outfit", sans-serif !important;
-            font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            box-shadow: 0 10px 24px rgba(123, 47, 247, 0.28);
-            flex-shrink: 0;
-        }
+        
 
-        .if-user-copy {
-            min-width: 0;
-        }
+        
 
-        .if-user-title {
-            font-family: "Outfit", sans-serif !important;
-            font-size: 1rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: var(--text) !important;
-        }
+        
 
-        .if-user-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 0.35rem;
-        }
+        
 
-        .if-user-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.38rem;
-            border-radius: 999px;
-            padding: 0.28rem 0.68rem;
-            background: rgba(67, 97, 238, 0.08);
-            border: 1px solid rgba(67, 97, 238, 0.10);
-            color: var(--text2) !important;
-            font-size: 0.74rem;
-            line-height: 1;
-        }
+        
 
-        .if-user-chip.role {
-            background: rgba(6, 214, 160, 0.10);
-            border-color: rgba(6, 214, 160, 0.18);
-            color: #047857 !important;
-            font-weight: 700;
-        }
+        
 
-        .if-user-chip.presence {
-            background: rgba(14, 165, 233, 0.10);
-            border-color: rgba(14, 165, 233, 0.16);
-            color: #075985 !important;
-            font-weight: 700;
-        }
+        
 
         .if-auth-card-marker {
             display: none;
@@ -2053,50 +1798,19 @@ def apply_futuristic_theme():
             margin-top: 2px;
         }
 
-        .if-upload-shell, .if-recent-shell {
-            border: 1px solid var(--border2);
-            border-radius: 18px;
-            background: var(--glass);
-            box-shadow: var(--sh);
-            transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
-            will-change: transform;
-        }
+        .if-upload-shell, 
 
-        .if-upload-shell:hover, .if-recent-shell:hover {
-            transform: translateY(-3px);
-            border-color: rgba(67, 97, 238, 0.28);
-            box-shadow: 0 18px 30px rgba(67, 97, 238, 0.16);
-        }
+        .if-upload-shell:hover, 
 
-        .if-upload-head, .if-recent-head {
-            padding: 0.95rem 1rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.56);
-        }
+        .if-upload-head, 
 
-        .if-upload-title, .if-recent-title {
-            font-family: "Outfit", sans-serif !important;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--text) !important;
-        }
+        .if-upload-title, 
 
-        .if-upload-sub, .if-recent-sub {
-            font-size: 0.77rem;
-            color: var(--muted) !important;
-            margin-top: 2px;
-        }
+        .if-upload-sub, 
 
-        .if-upload-body, .if-recent-body {
-            padding: 1rem;
-        }
+        .if-upload-body, 
 
-        .if-recent-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
-        }
+        
 
         .if-mini {
             border: 1px solid var(--border);
@@ -2146,81 +1860,32 @@ def apply_futuristic_theme():
             font-family: "JetBrains Mono", monospace !important;
         }
 
-        .if-recent-item {
-            border: 1px solid var(--border);
-            border-radius: 11px;
-            background: rgba(255, 255, 255, 0.78);
-            padding: 7px 9px;
-            margin-bottom: 7px;
-            transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
-            animation: ifSlideInBottom 0.45s ease both;
-        }
+        
 
-        .if-recent-item:nth-child(1) { animation-delay: 0.08s; }
-        .if-recent-item:nth-child(2) { animation-delay: 0.16s; }
-        .if-recent-item:nth-child(3) { animation-delay: 0.24s; }
-        .if-recent-item:nth-child(4) { animation-delay: 0.32s; }
-        .if-recent-item:nth-child(5) { animation-delay: 0.40s; }
-        .if-recent-item:nth-child(6) { animation-delay: 0.48s; }
-        .if-recent-item:nth-child(7) { animation-delay: 0.56s; }
-        .if-recent-item:nth-child(8) { animation-delay: 0.64s; }
-        .if-recent-item:nth-child(9) { animation-delay: 0.72s; }
-        .if-recent-item:nth-child(10) { animation-delay: 0.80s; }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
-        .if-recent-state.state-done {
-            color: #059669 !important;
-            border-color: rgba(16, 185, 129, 0.36);
-            background: rgba(16, 185, 129, 0.1);
-            box-shadow: 0 0 14px rgba(16, 185, 129, 0.24);
-        }
+        
 
-        .if-recent-state.state-running {
-            color: #b45309 !important;
-            border-color: rgba(245, 158, 11, 0.4);
-            background: rgba(245, 158, 11, 0.12);
-            box-shadow: 0 0 14px rgba(245, 158, 11, 0.22);
-        }
+        
 
-        .if-recent-state.state-failed {
-            color: #b91c1c !important;
-            border-color: rgba(239, 68, 68, 0.4);
-            background: rgba(239, 68, 68, 0.12);
-            box-shadow: 0 0 14px rgba(239, 68, 68, 0.22);
-        }
+        
 
-        .if-recent-item:hover {
-            transform: translateY(-2px);
-            border-color: rgba(67, 97, 238, 0.28);
-        }
+        
 
-        .if-recent-name {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text2) !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        
 
-        .if-recent-meta {
-            font-size: 0.68rem;
-            color: var(--light) !important;
-            font-family: "JetBrains Mono", monospace !important;
-            margin-top: 1px;
-        }
+        
 
-        .if-recent-state {
-            display: inline-block;
-            margin-top: 4px;
-            font-size: 0.66rem;
-            border-radius: 999px;
-            padding: 2px 8px;
-            font-family: "JetBrains Mono", monospace !important;
-            font-weight: 600;
-            border: 1px solid var(--border2);
-            background: rgba(67, 97, 238, 0.08);
-            color: var(--blue) !important;
-        }
+        
 
         .stTabs [data-baseweb="tab-list"] {
             position: relative;
@@ -2451,9 +2116,7 @@ def apply_futuristic_theme():
         }
 
         @media (max-width: 780px) {
-            .if-side-rail {
-                display: none;
-            }
+            
 
             .main .block-container {
                 padding-left: 0.8rem;
@@ -2482,13 +2145,9 @@ def apply_futuristic_theme():
                 flex-wrap: wrap;
             }
 
-            .if-user-strip {
-                align-items: flex-start;
-            }
+            
 
-            .if-user-meta {
-                gap: 6px;
-            }
+            
 
             .main .block-container:has(.if-auth-screen) {
                 min-height: auto;
@@ -2581,26 +2240,6 @@ def apply_futuristic_theme():
                 scroll-behavior: auto;
             }
 
-            .if-aurora,
-            .if-grid-fog,
-            .if-status,
-            .if-gem,
-            .if-hero-gem,
-            .if-badge,
-            .if-cap-card,
-            .if-topbar,
-            .if-hero,
-            .section-head,
-            .if-hero-title,
-            .dash-panel,
-            .dash-metric,
-            .if-mini,
-            .if-recent-item,
-            [data-testid="stTabs"] [role="tabpanel"],
-            div[data-testid="stProgressBar"] div[role="progressbar"] {
-                animation: none !important;
-            }
-
             .if-motion-ready .if-reveal {
                 opacity: 1 !important;
                 transform: none !important;
@@ -2629,38 +2268,6 @@ def render_live_background():
     st.markdown(
         """
         <div class="if-live-bg" aria-hidden="true"></div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_side_rail():
-    st.markdown(
-        """
-        <nav class="if-side-rail" aria-hidden="true">
-          <div class="if-rail-logo">
-            <div class="if-rail-gem">
-              <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 3L7 15.5H13.5L12 25L21 12.5H14.5L16 3Z" fill="white" fill-opacity="0.95"/>
-                <rect x="4" y="6.5" width="4.5" height="1.4" rx=".7" fill="white" fill-opacity=".5"/>
-                <rect x="4" y="9.2" width="3" height="1.4" rx=".7" fill="white" fill-opacity=".32"/>
-                <rect x="20.5" y="17" width="3.5" height="1.4" rx=".7" fill="white" fill-opacity=".5"/>
-                <rect x="21" y="19.7" width="2.5" height="1.4" rx=".7" fill="white" fill-opacity=".32"/>
-              </svg>
-            </div>
-            <div class="if-rail-dot"></div>
-          </div>
-          <div class="if-rail-item on">HOME</div>
-          <div class="if-rail-item">INV</div>
-          <div class="if-rail-item">REV</div>
-          <div class="if-rail-item">EXP</div>
-          <div class="if-rail-sep"></div>
-          <div class="if-rail-item">ANL</div>
-          <div class="if-rail-bottom">
-            <div class="if-rail-item">SET</div>
-            <div class="if-rail-item">HLP</div>
-          </div>
-        </nav>
         """,
         unsafe_allow_html=True,
     )
@@ -2850,40 +2457,6 @@ def inject_motion_runtime():
         """,
         height=0,
         width=0,
-    )
-
-
-def render_sidebar_brand():
-    st.markdown(
-        """
-        <div class="space-brand">
-          <div class="space-logo">
-            <svg width="26" height="26" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <defs>
-                <linearGradient id="if_side_doc" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#f8fbff"/>
-                  <stop offset="100%" stop-color="#dbeafe"/>
-                </linearGradient>
-                <linearGradient id="if_side_stamp" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#0ea5e9"/>
-                  <stop offset="100%" stop-color="#7b2ff7"/>
-                </linearGradient>
-              </defs>
-              <path d="M30 10h28l16 16v46c0 6.6-5.4 12-12 12H30c-6.6 0-12-5.4-12-12V22c0-6.6 5.4-12 12-12Z" fill="url(#if_side_doc)"/>
-              <path d="M58 10v16h16" fill="none" stroke="#b8c7ff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-              <rect x="34" y="40" width="30" height="7" rx="3.5" fill="#5b21b6"/>
-              <rect x="34" y="53" width="24" height="7" rx="3.5" fill="#7c3aed"/>
-              <circle cx="63" cy="64" r="10" fill="url(#if_side_stamp)"/>
-              <path d="M63 58.8v10.4M57.8 64h10.4" stroke="#f8fafc" stroke-width="3.2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div>
-            <div class="space-brand-title">invoiceflow</div>
-            <div class="space-brand-sub">Invoice Workspace</div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
     )
 
 
@@ -3438,95 +3011,6 @@ def render_upload_results(results: List[Dict[str, Any]], auto_process: bool):
         st.json(results)
 
 
-def relative_time_text(timestamp: Optional[float]) -> str:
-    if not timestamp:
-        return "just now"
-    diff = max(0, int(time.time() - timestamp))
-    if diff < 60:
-        return f"{diff}s ago"
-    if diff < 3600:
-        return f"{diff // 60}m ago"
-    if diff < 86400:
-        return f"{diff // 3600}h ago"
-    return f"{diff // 86400}d ago"
-
-
-def render_recent_upload_panel():
-    activity = st.session_state.upload_activity or []
-    completed = sum(1 for item in activity if str(item.get("status", "")).startswith("done"))
-    running = sum(
-        1
-        for item in activity
-        if str(item.get("detail", "")).lower() in {"processing", "queued"}
-    )
-    failed = sum(1 for item in activity if "failed" in str(item.get("status", "")).lower())
-
-    rows: List[str] = []
-    for item in activity[:8]:
-        file_name = html.escape(str(item.get("file") or "uploaded_file"))
-        invoice_id = html.escape(str(item.get("invoice_id") or "-"))
-        status = html.escape(str(item.get("status") or "unknown"))
-        status_text = str(item.get("status") or "").lower()
-        detail_text = str(item.get("detail") or "").lower()
-        if "fail" in status_text:
-            state_class = "state-failed"
-        elif "done" in status_text or "success" in status_text or "complete" in status_text:
-            state_class = "state-done"
-        elif detail_text in {"processing", "queued", "running"} or "run" in status_text or "queue" in status_text:
-            state_class = "state-running"
-        else:
-            state_class = ""
-        when = relative_time_text(item.get("uploaded_at"))
-        rows.append(
-            f"""
-            <div class="if-recent-item">
-              <div class="if-recent-name">{file_name}</div>
-              <div class="if-recent-meta">{when} | {invoice_id}</div>
-              <span class="if-recent-state {state_class}">{status}</span>
-            </div>
-            """
-        )
-
-    if not rows:
-        rows.append(
-            """
-            <div class="if-recent-item">
-              <div class="if-recent-name">No files uploaded yet</div>
-              <div class="if-recent-meta">Upload from the left panel to see live activity</div>
-            </div>
-            """
-        )
-
-    st.markdown(
-        f"""
-        <div class="if-recent-shell if-reveal">
-          <div class="if-recent-head">
-            <div class="if-recent-title">Recent Files</div>
-            <div class="if-recent-sub">Latest processed invoices in this session</div>
-          </div>
-          <div class="if-recent-body">
-            <div class="if-recent-grid">
-              <div class="if-mini if-mini-done">
-                <div class="if-mini-val if-countup" data-count-end="{completed}" data-count-decimals="0">{completed}</div>
-                <div class="if-mini-lbl">DONE</div>
-              </div>
-              <div class="if-mini if-mini-running">
-                <div class="if-mini-val if-countup" data-count-end="{running}" data-count-decimals="0">{running}</div>
-                <div class="if-mini-lbl">RUNNING</div>
-              </div>
-              <div class="if-mini if-mini-failed">
-                <div class="if-mini-val if-countup" data-count-end="{failed}" data-count-decimals="0">{failed}</div>
-                <div class="if-mini-lbl">FAILED</div>
-              </div>
-            </div>
-            {''.join(rows)}
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 def init_state():
     if st.session_state.get("app_boot_marker") != APP_BOOT_MARKER:
         st.session_state.app_boot_marker = APP_BOOT_MARKER
@@ -4063,39 +3547,6 @@ def render_auth_gate():
         )
 
 
-def render_session_bar():
-    user = st.session_state.get("auth_user") or {}
-    name = user.get("full_name") or user.get("email") or "User"
-    email = user.get("email") or ""
-    company = user.get("company") or "-"
-    role = str(user.get("role") or "user").upper()
-    initials = "".join(part[:1] for part in name.split() if part)[:2].upper() or name[:2].upper() or "U"
-
-    info_col, action_col = st.columns([5.2, 1], gap="small")
-    with info_col:
-        st.markdown(
-            f"""
-            <div class="if-user-strip if-reveal">
-              <div class="if-user-avatar">{html.escape(initials)}</div>
-              <div class="if-user-copy">
-                <div class="if-user-title">Signed in as {html.escape(name)}</div>
-                <div class="if-user-meta">
-                  <span class="if-user-chip presence">Active session</span>
-                  <span class="if-user-chip">{html.escape(email or "No email")}</span>
-                  <span class="if-user-chip">{html.escape(company)}</span>
-                  <span class="if-user-chip role">{html.escape(role)}</span>
-                </div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with action_col:
-        if st.button("Log out", width='stretch', key="logout_btn"):
-            clear_auth_state("You signed out.")
-            st.rerun()
-
-
 def port_in_use(host: str, port: int, timeout: float = 0.4) -> bool:
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -4540,84 +3991,6 @@ def render_upload():
                 st.info("Review data will appear automatically in Review once processing completes.")
 
 
-def render_processing():
-    render_section_intro(
-        "Processing",
-        "Start extraction for any invoice and monitor progress in real time.",
-    )
-    st.caption("Use the invoice ID returned in Upload to start or check processing.")
-
-    invoice_id = st.text_input("Invoice ID", key="process_id", placeholder="Enter invoice ID")
-    use_cache = st.checkbox("Use cache when available", value=True, key="process_cache")
-    prefer_handwriting_ocr = st.checkbox(
-        "Prefer handwritten OCR",
-        value=False,
-        key="process_prefer_handwriting_ocr",
-        help="Turn this on only for simple handwritten invoices. Default processing remains best for printed invoices.",
-    )
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("Start Processing", width='stretch', type="primary", key="start_processing_btn"):
-            if not invoice_id:
-                st.warning("Please enter an invoice ID.")
-                return
-            payload = {
-                "invoice_id": invoice_id,
-                "use_cache": use_cache,
-                "prefer_handwriting_ocr": prefer_handwriting_ocr,
-            }
-            res = post_json(f"{st.session_state.base_url}/process/start", payload)
-            if isinstance(res, dict) and res.get("_error"):
-                st.error(f"Backend not reachable: {res['_error']}")
-                return
-            data = ensure_dict_payload(response_payload(res))
-            if res.status_code == 200:
-                st.success(data.get("message", "Processing started"))
-                st.session_state.process_status = data
-            else:
-                st.error(data)
-    with col2:
-        if st.button("Check Status", width='stretch', key="check_processing_btn"):
-            if not invoice_id:
-                st.warning("Please enter an invoice ID.")
-                return
-            res = get_json(f"{st.session_state.base_url}/process/status/{invoice_id}")
-            if isinstance(res, dict) and res.get("_error"):
-                st.error(f"Backend not reachable: {res['_error']}")
-                return
-            data = ensure_dict_payload(response_payload(res))
-            if res.status_code == 200:
-                st.session_state.process_status = data
-            else:
-                st.error(data)
-    with col3:
-        if st.button("Clear Status", width='stretch', key="clear_processing_btn"):
-            st.session_state.process_status = None
-
-    status = st.session_state.process_status
-    if not status:
-        st.info("No processing status yet. Start processing or check an existing invoice.")
-        return
-
-    raw_progress = status.get("progress", 0)
-    progress_value = raw_progress if isinstance(raw_progress, (int, float)) else 0
-    clamped_progress = max(0.0, min(progress_value / 100, 1.0))
-    st.progress(clamped_progress)
-
-    metric_col1, metric_col2, metric_col3 = st.columns(3)
-    metric_col1.metric("Progress", f"{progress_value:.0f}%")
-    metric_col2.metric("Status", str(status.get("status", "unknown")).upper())
-    metric_col3.metric("Current Step", str(status.get("current_step") or "-"))
-
-    if status.get("error_message"):
-        st.error(status.get("error_message"))
-
-    if status.get("extracted_data"):
-        with st.expander("View extracted data"):
-            st.json(status.get("extracted_data"))
-
-
 def render_review():
     render_section_intro(
         "Manual Review",
@@ -4926,66 +4299,6 @@ def render_export():
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     key="download_excel_btn",
                 )
-
-
-def render_history():
-    render_section_intro(
-        "History & Uploaded Files",
-        "Refresh and filter invoice records to quickly find earlier uploads.",
-    )
-    if st.button("Refresh History", width='stretch', type="primary", key="refresh_history_btn"):
-        res = get_json(f"{st.session_state.base_url}/invoices/list")
-        if isinstance(res, dict) and res.get("_error"):
-            st.error(f"Backend not reachable: {res['_error']}")
-            return
-        data = response_payload(res)
-        if res.status_code == 200:
-            st.session_state.history = data if isinstance(data, list) else []
-        else:
-            st.error(data)
-            
-            return
-
-    history = st.session_state.history or []
-    if not history:
-        st.info("No history loaded yet. Click Refresh History.")
-        return
-
-    normalized_rows = [row if isinstance(row, dict) else {"value": row} for row in history]
-    status_options = sorted(
-        {
-            str(row.get("processing_status") or row.get("status") or "unknown")
-            for row in normalized_rows
-        }
-    )
-
-    filter_col1, filter_col2 = st.columns([2, 1])
-    with filter_col1:
-        query = st.text_input("Search", key="history_search", placeholder="Invoice ID or filename")
-    with filter_col2:
-        selected_status = st.selectbox(
-            "Status",
-            ["All"] + status_options,
-            key="history_status_filter",
-        )
-
-    query_text = query.strip().lower()
-    filtered_rows = []
-    for row in normalized_rows:
-        row_status = str(row.get("processing_status") or row.get("status") or "unknown")
-        if selected_status != "All" and row_status != selected_status:
-            continue
-        if query_text:
-            haystack = " ".join(
-                str(row.get(field, ""))
-                for field in ("invoice_id", "filename", "processing_status", "status")
-            ).lower()
-            if query_text not in haystack:
-                continue
-        filtered_rows.append(row)
-
-    st.caption(f"Showing {len(filtered_rows)} of {len(normalized_rows)} records.")
-    st.dataframe(filtered_rows, width='stretch')
 
 
 def main():
