@@ -4466,73 +4466,68 @@ def render_upload():
         """,
         unsafe_allow_html=True,
     )
-    left_col, right_col = st.columns([2, 1], gap="large")
     auto_process = True
     results: Optional[List[Dict[str, Any]]] = None
 
-    with left_col:
-        selector_col, hint_col = st.columns([2, 1], gap="small")
-        with selector_col:
-            mode = st.radio("Upload Mode", ["Batch files", "Folder (zip)"], horizontal=True, key="upload_mode")
-        with hint_col:
-            st.caption("Supported: PDF, PNG, JPG, JPEG, TIF, TIFF, ZIP")
-            st.caption("Production mode: auto-process ON")
+    selector_col, hint_col = st.columns([2, 1], gap="small")
+    with selector_col:
+        mode = st.radio("Upload Mode", ["Batch files", "Folder (zip)"], horizontal=True, key="upload_mode")
+    with hint_col:
+        st.caption("Supported: PDF, PNG, JPG, JPEG, TIF, TIFF, ZIP")
+        st.caption("Production mode: auto-process ON")
 
-        use_cache = st.checkbox("Use cache for processing", value=True, key="upload_use_cache")
-        prefer_handwriting_ocr = st.checkbox(
-            "Prefer handwritten OCR for this batch",
-            value=False,
-            key="upload_prefer_handwriting_ocr",
-            help="Use this only for basic handwritten invoices. Printed invoices should usually leave this off.",
+    use_cache = st.checkbox("Use cache for processing", value=True, key="upload_use_cache")
+    prefer_handwriting_ocr = st.checkbox(
+        "Prefer handwritten OCR for this batch",
+        value=False,
+        key="upload_prefer_handwriting_ocr",
+        help="Use this only for basic handwritten invoices. Printed invoices should usually leave this off.",
+    )
+
+    if mode == "Batch files":
+        files = st.file_uploader(
+            "Select invoice files",
+            type=["pdf", "png", "jpg", "jpeg", "tif", "tiff"],
+            accept_multiple_files=True,
+            key="upload_batch_files",
         )
-
-        if mode == "Batch files":
-            files = st.file_uploader(
-                "Select invoice files",
-                type=["pdf", "png", "jpg", "jpeg", "tif", "tiff"],
-                accept_multiple_files=True,
-                key="upload_batch_files",
-            )
-            clicked = st.button("Upload Selected Files", width='stretch', type="primary", key="upload_batch_button")
-            if clicked:
-                if not files:
-                    st.warning("Please select at least one file.")
+        clicked = st.button("Upload Selected Files", width='stretch', type="primary", key="upload_batch_button")
+        if clicked:
+            if not files:
+                st.warning("Please select at least one file.")
+            else:
+                entries = [(f.name, f.getvalue(), f.type or "application/octet-stream") for f in files]
+                results = upload_invoice_entries(
+                    entries,
+                    auto_process=auto_process,
+                    use_cache=use_cache,
+                    prefer_handwriting_ocr=prefer_handwriting_ocr,
+                )
+    else:
+        zip_file = st.file_uploader(
+            "Upload a zip file containing invoices",
+            type=["zip"],
+            key="upload_zip_file",
+        )
+        clicked = st.button("Upload Zip Contents", width='stretch', type="primary", key="upload_zip_button")
+        if clicked:
+            if not zip_file:
+                st.warning("Please select a zip file.")
+            else:
+                try:
+                    extracted = build_files_from_zip(zip_file.getvalue())
+                except Exception as e:
+                    st.error(f"Failed to read zip: {e}")
+                    extracted = []
+                if not extracted:
+                    st.warning("No files found in zip.")
                 else:
-                    entries = [(f.name, f.getvalue(), f.type or "application/octet-stream") for f in files]
                     results = upload_invoice_entries(
-                        entries,
+                        extracted,
                         auto_process=auto_process,
                         use_cache=use_cache,
                         prefer_handwriting_ocr=prefer_handwriting_ocr,
                     )
-        else:
-            zip_file = st.file_uploader(
-                "Upload a zip file containing invoices",
-                type=["zip"],
-                key="upload_zip_file",
-            )
-            clicked = st.button("Upload Zip Contents", width='stretch', type="primary", key="upload_zip_button")
-            if clicked:
-                if not zip_file:
-                    st.warning("Please select a zip file.")
-                else:
-                    try:
-                        extracted = build_files_from_zip(zip_file.getvalue())
-                    except Exception as e:
-                        st.error(f"Failed to read zip: {e}")
-                        extracted = []
-                    if not extracted:
-                        st.warning("No files found in zip.")
-                    else:
-                        results = upload_invoice_entries(
-                            extracted,
-                            auto_process=auto_process,
-                            use_cache=use_cache,
-                            prefer_handwriting_ocr=prefer_handwriting_ocr,
-                        )
-
-    with right_col:
-        render_recent_upload_panel()
 
     if results:
         render_upload_results(results, auto_process=auto_process)
@@ -5015,7 +5010,6 @@ def main():
         inject_motion_runtime()
         return
 
-    render_session_bar()
     render_main_header()
     render_capability_cards()
     render_dashboard_panel(st.session_state.backend_ok, st.session_state.backend_status)
