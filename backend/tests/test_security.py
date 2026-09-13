@@ -10,10 +10,9 @@ def test_password_hashing():
 
 
 def test_jwt_token_generation():
-    data = {"sub": "testuser", "role": "admin"}
+    data = {"sub": "testuser"}
     token = create_access_token(data)
     assert isinstance(token, str)
     decoded = decode_access_token(token)
     assert decoded is not None
     assert decoded.get("sub") == "testuser"
-    assert decoded.get("role") == "admin"

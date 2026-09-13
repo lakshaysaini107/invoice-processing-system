@@ -8,18 +8,17 @@ class UserRepository:
     async def create(self, user: UserCreate, hashed_pw: str) -> UserOut:
         user_id = str(uuid.uuid4())
         query = """
-        INSERT INTO users (id, username, email, hashed_password, full_name, role)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO users (id, username, email, hashed_password, full_name)
+        VALUES (%s, %s, %s, %s, %s)
         """
         await db_manager.execute_query(
-            query, (user_id, user.username, user.email, hashed_pw, user.full_name, user.role)
+            query, (user_id, user.username, user.email, hashed_pw, user.full_name)
         )
         return UserOut(
             id=user_id,
             username=user.username,
             email=user.email,
             full_name=user.full_name,
-            role=user.role,
         )
 
     async def get_by_username(self, username: str) -> Optional[Dict]:

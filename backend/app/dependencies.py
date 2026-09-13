@@ -15,7 +15,6 @@ async def get_current_user(
         username="demo_user",
         email="demo@example.com",
         full_name="Demo User",
-        role="admin",
     )
 
     if settings.AUTH_DISABLED:

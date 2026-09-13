@@ -51,10 +51,10 @@ class DatabaseManager:
             email TEXT,
             hashed_password TEXT NOT NULL,
             full_name TEXT,
-            role TEXT DEFAULT 'user',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """)
+
 
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
@@ -126,10 +126,10 @@ class DatabaseManager:
                     email VARCHAR(128),
                     hashed_password VARCHAR(255) NOT NULL,
                     full_name VARCHAR(128),
-                    role VARCHAR(32) DEFAULT 'user',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
                 """)
+
 
                 await cursor.execute("""
                 CREATE TABLE IF NOT EXISTS invoices (

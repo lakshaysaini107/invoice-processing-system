@@ -8,7 +8,6 @@ class UserCreate(BaseModel):
     email: Optional[EmailStr] = None
     password: str = Field(..., min_length=4)
     full_name: Optional[str] = None
-    role: str = "user"
 
 
 class UserLogin(BaseModel):
@@ -21,7 +20,6 @@ class UserOut(BaseModel):
     username: str
     email: Optional[str] = None
     full_name: Optional[str] = None
-    role: str = "user"
     created_at: Optional[datetime] = None
 
 
