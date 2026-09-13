@@ -1,0 +1,14 @@
+# Root requirement file for Invoice Processing System
+-r backend/requirements.txt
+
+# Streamlit frontends
+streamlit>=1.32.0
+requests>=2.31.0
+
+# Testing
+httpx>=0.27.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+
+# Optional NLP / OCR
+spacy>=3.7.0
